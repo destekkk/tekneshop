@@ -44,6 +44,10 @@ import {
   syncSellersFromListings,
   updateListingSeller,
 } from "@/lib/sellers-store";
+import {
+  deleteListingInquiry,
+  markListingInquiryRead,
+} from "@/lib/listing-inquiries-store";
 import { deleteOffer, updateOfferStatus } from "@/lib/offers-store";
 import {
   createUser,
@@ -305,6 +309,12 @@ export async function submitPublicListingAction(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   if (!title) return { error: "Başlık zorunlu" };
 
+  const showContactPhone = formData.get("showContactPhone") === "yes";
+  const contactPhone = String(formData.get("contactPhone") || "").trim();
+  if (showContactPhone && !contactPhone) {
+    return { error: "Telefonun ilanda görünmesi için telefon numarası girin." };
+  }
+
   const slug = slugify(title) + "-" + Date.now().toString(36);
   const listingData = {
     slug,
@@ -321,7 +331,8 @@ export async function submitPublicListingAction(formData: FormData) {
     engine: String(formData.get("engine") || ""),
     contactName: String(formData.get("contactName") || ""),
     contactEmail: String(formData.get("contactEmail") || ""),
-    contactPhone: String(formData.get("contactPhone") || ""),
+    contactPhone,
+    showContactPhone,
     image: "/boats/placeholder.jpg",
     feePaid: config.listingPricing.freePeriod || !config.listingPricing.enabled,
     feeAmount: config.listingPricing.enabled ? config.listingPricing.pricePerListing : 0,
@@ -858,4 +869,30 @@ export async function deleteOfferAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/teklifler");
+}
+
+export async function markListingInquiryReadAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await markListingInquiryRead(id);
+  await logActivity({
+    action: "read_listing_inquiry",
+    entityType: "listing_inquiry",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/mesajlar");
+}
+
+export async function deleteListingInquiryAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteListingInquiry(id);
+  await logActivity({
+    action: "delete_listing_inquiry",
+    entityType: "listing_inquiry",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/mesajlar");
 }

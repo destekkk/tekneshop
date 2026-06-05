@@ -35,6 +35,8 @@ export const actionLabels: Record<string, string> = {
   accept_offer: "Teklif kabul edildi",
   reject_offer: "Teklif reddedildi",
   delete_offer: "Teklif silindi",
+  read_listing_inquiry: "İlan mesajı okundu",
+  delete_listing_inquiry: "İlan mesajı silindi",
 };
 
 export async function getRecentActivity(limit = 30) {

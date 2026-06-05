@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import ListingThumbnail from "@/components/ListingThumbnail";
+import ListingContact from "@/components/ListingContact";
 import OfferForm from "@/components/OfferForm";
 import WhatsAppLink from "@/components/WhatsAppLink";
 import { getCurrentUser } from "@/lib/auth/user-session";
@@ -101,35 +102,42 @@ export default async function BoatDetailPage({ params }: Props) {
           </table>
           <div className="mt-8 space-y-4">
             {listing && listing.status === "approved" ? (
-              <OfferForm
-                listingId={listing.id}
-                listingSlug={slug}
-                listingTitle={boat.title}
-                listingPrice={boat.price}
-                user={user}
-                existingOffer={existingOffer}
-              />
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              {config.whatsappNumber ? (
-                <WhatsAppLink
-                  number={config.whatsappNumber}
-                  siteName={config.siteName}
-                  prefillMessage={config.whatsappPrefillMessage || undefined}
-                  context="listing"
+              <>
+                <ListingContact
+                  listing={listing}
+                  listingSlug={slug}
                   listingTitle={boat.title}
                   listingUrl={listingUrl}
                   listingNumber={boat.listingNumber}
-                  variant="button"
-                  label={`${config.siteName} üzerinden sor`}
+                  siteName={config.siteName}
+                  user={user}
                 />
-              ) : (
-                <button type="button" className="btn-cta rounded-sm px-8 py-3 text-sm">
-                  Satıcıya mesaj gönder (yakında)
-                </button>
-              )}
-            </div>
+                <OfferForm
+                  listingId={listing.id}
+                  listingSlug={slug}
+                  listingTitle={boat.title}
+                  listingPrice={boat.price}
+                  user={user}
+                  existingOffer={existingOffer}
+                />
+              </>
+            ) : (
+              <div className="flex flex-wrap gap-3">
+                {config.whatsappNumber ? (
+                  <WhatsAppLink
+                    number={config.whatsappNumber}
+                    siteName={config.siteName}
+                    prefillMessage={config.whatsappPrefillMessage || undefined}
+                    context="listing"
+                    listingTitle={boat.title}
+                    listingUrl={listingUrl}
+                    listingNumber={boat.listingNumber}
+                    variant="button"
+                    label={`${config.siteName} üzerinden sor`}
+                  />
+                ) : null}
+              </div>
+            )}
           </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">

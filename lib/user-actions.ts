@@ -6,6 +6,7 @@ import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
+import { createListingInquiry } from "@/lib/listing-inquiries-store";
 import { createOffer, getUserOfferForListing } from "@/lib/offers-store";
 import { getListingBySlug } from "@/lib/listings-store";
 import {
@@ -107,6 +108,63 @@ export async function submitOfferAction(
   return {
     ok: true,
     message: "Teklifiniz iletildi. Satıcı veya yönetici inceleyecektir.",
+    error: "",
+  };
+}
+
+export async function submitListingInquiryAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const listingId = Number(formData.get("listingId"));
+  const listingSlug = String(formData.get("listingSlug") || "");
+  const listingTitle = String(formData.get("listingTitle") || "");
+  const message = String(formData.get("message") || "").trim();
+
+  const session = await getUserSession();
+  const senderName = session.isLoggedIn
+    ? session.name
+    : String(formData.get("senderName") || "").trim();
+  const senderEmail = session.isLoggedIn
+    ? session.email
+    : String(formData.get("senderEmail") || "").trim().toLowerCase();
+  const senderPhone = String(formData.get("senderPhone") || "").trim();
+
+  if (!listingId || !message) {
+    return { ok: false, message: "", error: "Mesajınızı yazın." };
+  }
+  if (!senderName || !senderEmail) {
+    return { ok: false, message: "", error: "Ad ve e-posta zorunludur." };
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Mesaj gönderimi için veritabanı gerekli." };
+  }
+
+  const listing = await getListingBySlug(listingSlug);
+  if (!listing || listing.id !== listingId || listing.status !== "approved") {
+    return { ok: false, message: "", error: "Bu ilan için mesaj gönderilemiyor." };
+  }
+  if (listing.showContactPhone) {
+    return { ok: false, message: "", error: "Bu ilan doğrudan telefon ile iletişime açık." };
+  }
+
+  await createListingInquiry({
+    listingId,
+    listingTitle: listingTitle || listing.title,
+    senderUserId: session.isLoggedIn ? session.userId : undefined,
+    senderName,
+    senderEmail,
+    senderPhone: senderPhone || undefined,
+    message,
+  });
+
+  revalidatePath(`/tekne/ilan/${listingSlug}`);
+  revalidatePath("/admin/mesajlar");
+
+  return {
+    ok: true,
+    message: "Mesajınız iletildi. İlan veren sizinle iletişime geçebilir.",
     error: "",
   };
 }

@@ -1,4 +1,5 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { getUnreadListingInquiryCount } from "@/lib/listing-inquiries-store";
 import { getUnreadMessageCount } from "@/lib/messages-store";
 import { getPendingOfferCount } from "@/lib/offers-store";
 import { getAdminStats } from "@/lib/listings-store";
@@ -10,7 +11,9 @@ export default async function AdminShell({ children }: { children: React.ReactNo
   try {
     [stats, unread, pendingOffers] = await Promise.all([
       getAdminStats(),
-      getUnreadMessageCount(),
+      Promise.all([getUnreadMessageCount(), getUnreadListingInquiryCount()]).then(
+        ([a, b]) => a + b,
+      ),
       getPendingOfferCount(),
     ]);
   } catch {

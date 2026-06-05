@@ -122,6 +122,7 @@ export async function getAdminListings(opts?: {
       contactName: null,
       contactEmail: null,
       contactPhone: null,
+      showContactPhone: false,
       isFeatured: Boolean(b.badge === "Vitrin"),
       rejectionReason: null,
       adminNotes: null,

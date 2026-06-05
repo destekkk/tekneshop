@@ -48,6 +48,7 @@ export const listings = pgTable("listings", {
   contactName: text("contact_name"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
+  showContactPhone: boolean("show_contact_phone").notNull().default(false),
   isFeatured: boolean("is_featured").notNull().default(false),
   rejectionReason: text("rejection_reason"),
   adminNotes: text("admin_notes"),
@@ -206,6 +207,19 @@ export const emailSubscribers = pgTable("email_subscribers", {
   unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
 });
 
+export const listingInquiries = pgTable("listing_inquiries", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull(),
+  listingTitle: text("listing_title"),
+  senderUserId: integer("sender_user_id"),
+  senderName: text("sender_name").notNull(),
+  senderEmail: text("sender_email").notNull(),
+  senderPhone: text("sender_phone"),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const listingOffers = pgTable("listing_offers", {
   id: serial("id").primaryKey(),
   listingId: integer("listing_id").notNull(),
@@ -246,6 +260,8 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type ListingInquiry = typeof listingInquiries.$inferSelect;
+export type NewListingInquiry = typeof listingInquiries.$inferInsert;
 export type ListingOffer = typeof listingOffers.$inferSelect;
 export type NewListingOffer = typeof listingOffers.$inferInsert;
 export type EmailSubscriber = typeof emailSubscribers.$inferSelect;

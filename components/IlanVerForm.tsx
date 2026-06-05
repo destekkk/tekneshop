@@ -85,13 +85,32 @@ export default function IlanVerForm() {
         </div>
         <div>
           <label className="text-sm font-medium">Telefon</label>
-          <input name="contactPhone" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input name="contactPhone" type="tel" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </div>
         <div>
           <label className="text-sm font-medium">E-posta</label>
           <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </div>
       </div>
+      <fieldset className="space-y-2 rounded-lg border border-border bg-[#fafafa] p-4">
+        <legend className="px-1 text-sm font-medium">İletişim tercihi</legend>
+        <label className="flex cursor-pointer items-start gap-2 text-[13px]">
+          <input type="radio" name="showContactPhone" value="yes" className="mt-1" />
+          <span>
+            <strong>Telefonum ilanda görünsün</strong>
+            <span className="block text-[12px] text-muted">Ziyaretçiler numaranızı doğrudan görebilir.</span>
+          </span>
+        </label>
+        <label className="flex cursor-pointer items-start gap-2 text-[13px]">
+          <input type="radio" name="showContactPhone" value="no" defaultChecked className="mt-1" />
+          <span>
+            <strong>Telefonumu gizle, mesajla ulaşılsın</strong>
+            <span className="block text-[12px] text-muted">
+              Numaranız gizli kalır; ilgilenenler mesaj formu ile ulaşır.
+            </span>
+          </span>
+        </label>
+      </fieldset>
       <label className="flex items-start gap-2 text-[12px] text-muted">
         <input name="emailConsent" type="checkbox" className="mt-0.5" />
         TekneShop duyuru ve kampanya e-postaları almak istiyorum (isteğe bağlı)

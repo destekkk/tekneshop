@@ -122,6 +122,7 @@ const statements = [
   )`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS admin_notes TEXT`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS listing_number INTEGER UNIQUE`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS show_contact_phone BOOLEAN NOT NULL DEFAULT false`,
   `UPDATE listings SET listing_number = 1000000 + id WHERE listing_number IS NULL`,
   `CREATE TABLE IF NOT EXISTS announcements (
     id SERIAL PRIMARY KEY,
@@ -176,6 +177,18 @@ const statements = [
     active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS listing_inquiries (
+    id SERIAL PRIMARY KEY,
+    listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    listing_title TEXT,
+    sender_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    sender_name TEXT NOT NULL,
+    sender_email TEXT NOT NULL,
+    sender_phone TEXT,
+    message TEXT NOT NULL,
+    read BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`,
   `CREATE TABLE IF NOT EXISTS listing_offers (
     id SERIAL PRIMARY KEY,

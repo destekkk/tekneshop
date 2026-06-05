@@ -32,6 +32,9 @@ export default function AdminPendingListings({ rows }: { rows: Listing[] }) {
                 İletişim: {row.contactName || "—"} · {row.contactPhone || "—"} ·{" "}
                 {row.contactEmail || "—"}
               </p>
+              <p className="mt-1 text-[11px] text-muted">
+                {row.showContactPhone ? "Telefon ilanda görünür" : "Mesajla iletişim (telefon gizli)"}
+              </p>
             </div>
             <ListingActions id={row.id} status={row.status} isFeatured={row.isFeatured} />
           </div>
