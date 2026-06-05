@@ -16,13 +16,15 @@ import {
   Wallet,
   Radio,
   Settings,
+  UserCircle,
   Users,
 } from "lucide-react";
 import { adminLogoutAction } from "@/lib/admin/actions";
 
 const nav = [
   { href: "/admin", label: "Özet", icon: LayoutDashboard, exact: true },
-  { href: "/admin/ilanlar", label: "İlanlar", icon: ClipboardList },
+  { href: "/admin/ilanlar", label: "Tüm İlanlar", icon: ClipboardList },
+  { href: "/admin/ilan-verenler", label: "İlan Verenler", icon: UserCircle },
   { href: "/admin/kategoriler", label: "Kategoriler", icon: FolderTree },
   { href: "/admin/reklamlar", label: "Reklam Yönetimi", icon: Megaphone },
   { href: "/admin/duyurular", label: "Duyurular", icon: Radio },

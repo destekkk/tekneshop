@@ -138,33 +138,37 @@ export async function getAdminListings(opts?: {
     }
     return demo;
   }
-  const db = getDb();
-  const filters = [];
-  if (opts?.status) filters.push(eq(listings.status, opts.status));
-  if (opts?.boatType) filters.push(eq(listings.boatType, opts.boatType));
-  if (opts?.condition) filters.push(eq(listings.condition, opts.condition));
-  if (opts?.type) filters.push(eq(listings.type, opts.type));
-  if (opts?.search) {
-    const raw = opts.search.trim();
-    const q = `%${raw}%`;
-    if (/^\d+$/.test(raw)) {
-      filters.push(
-        or(
-          ilike(listings.title, q),
-          ilike(listings.location, q),
-          ilike(listings.slug, q),
-          eq(listings.listingNumber, Number(raw)),
-        )!,
-      );
-    } else {
-      filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
+  try {
+    const db = getDb();
+    const filters = [];
+    if (opts?.status) filters.push(eq(listings.status, opts.status));
+    if (opts?.boatType) filters.push(eq(listings.boatType, opts.boatType));
+    if (opts?.condition) filters.push(eq(listings.condition, opts.condition));
+    if (opts?.type) filters.push(eq(listings.type, opts.type));
+    if (opts?.search) {
+      const raw = opts.search.trim();
+      const q = `%${raw}%`;
+      if (/^\d+$/.test(raw)) {
+        filters.push(
+          or(
+            ilike(listings.title, q),
+            ilike(listings.location, q),
+            ilike(listings.slug, q),
+            eq(listings.listingNumber, Number(raw)),
+          )!,
+        );
+      } else {
+        filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
+      }
     }
+    return await db
+      .select()
+      .from(listings)
+      .where(filters.length ? and(...filters) : undefined)
+      .orderBy(desc(listings.createdAt));
+  } catch {
+    return [];
   }
-  return db
-    .select()
-    .from(listings)
-    .where(filters.length ? and(...filters) : undefined)
-    .orderBy(desc(listings.createdAt));
 }
 
 export async function getAdminStats() {
@@ -176,35 +180,49 @@ export async function getAdminStats() {
       rejected: 0,
       featured: boatListings.filter((b) => b.badge === "Vitrin").length,
       dbConnected: false,
+      dbError: false,
     };
   }
-  const db = getDb();
-  const [total] = await db.select({ c: count() }).from(listings);
-  const [pending] = await db
-    .select({ c: count() })
-    .from(listings)
-    .where(eq(listings.status, "pending"));
-  const [approved] = await db
-    .select({ c: count() })
-    .from(listings)
-    .where(eq(listings.status, "approved"));
-  const [rejected] = await db
-    .select({ c: count() })
-    .from(listings)
-    .where(eq(listings.status, "rejected"));
-  const [featured] = await db
-    .select({ c: count() })
-    .from(listings)
-    .where(eq(listings.isFeatured, true));
+  try {
+    const db = getDb();
+    const [total] = await db.select({ c: count() }).from(listings);
+    const [pending] = await db
+      .select({ c: count() })
+      .from(listings)
+      .where(eq(listings.status, "pending"));
+    const [approved] = await db
+      .select({ c: count() })
+      .from(listings)
+      .where(eq(listings.status, "approved"));
+    const [rejected] = await db
+      .select({ c: count() })
+      .from(listings)
+      .where(eq(listings.status, "rejected"));
+    const [featured] = await db
+      .select({ c: count() })
+      .from(listings)
+      .where(eq(listings.isFeatured, true));
 
-  return {
-    total: total.c,
-    pending: pending.c,
-    approved: approved.c,
-    rejected: rejected.c,
-    featured: featured.c,
-    dbConnected: true,
-  };
+    return {
+      total: total.c,
+      pending: pending.c,
+      approved: approved.c,
+      rejected: rejected.c,
+      featured: featured.c,
+      dbConnected: true,
+      dbError: false,
+    };
+  } catch {
+    return {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      featured: 0,
+      dbConnected: true,
+      dbError: true,
+    };
+  }
 }
 
 export function slugify(text: string) {
@@ -223,19 +241,33 @@ export function slugify(text: string) {
 }
 
 export async function nextListingNumber() {
-  const db = getDb();
-  const [row] = await db
-    .select({
-      next: sql<number>`COALESCE(MAX(${listings.listingNumber}), ${LISTING_NUMBER_START - 1}) + 1`,
-    })
-    .from(listings);
-  return row?.next ?? LISTING_NUMBER_START;
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({
+        next: sql<number>`COALESCE(MAX(${listings.listingNumber}), ${LISTING_NUMBER_START - 1}) + 1`,
+      })
+      .from(listings);
+    return row?.next ?? LISTING_NUMBER_START;
+  } catch {
+    return LISTING_NUMBER_START;
+  }
 }
 
 export async function createListing(data: NewListing) {
   const db = getDb();
-  const listingNumber = data.listingNumber ?? (await nextListingNumber());
-  const [row] = await db.insert(listings).values({ ...data, listingNumber }).returning();
+  let listingNumber = data.listingNumber;
+  if (!listingNumber) {
+    try {
+      listingNumber = await nextListingNumber();
+    } catch {
+      listingNumber = undefined;
+    }
+  }
+  const [row] = await db
+    .insert(listings)
+    .values(listingNumber ? { ...data, listingNumber } : data)
+    .returning();
   return row;
 }
 

@@ -3,6 +3,7 @@ import AdminListingsTable from "@/components/admin/AdminListingsTable";
 import AdminPendingListings from "@/components/admin/AdminPendingListings";
 import ListingCategoryTabs from "@/components/admin/ListingCategoryTabs";
 import ListingsTabs, { parseListingTab } from "@/components/admin/ListingsTabs";
+import { isDbConfigured } from "@/lib/db";
 import {
   countByCategory,
   getListingCategoryFilter,
@@ -12,15 +13,15 @@ import { getAdminListings, getAdminStats } from "@/lib/listings-store";
 
 const tabTitles = {
   tumu: "Tüm İlanlar",
-  bekleyen: "Onay Bekleyen İlanlar",
-  onayli: "Onaylı İlanlar",
-  reddedilen: "Reddedilmiş İlanlar",
+  bekleyen: "Onay Bekleyen",
+  onayli: "Onaylı",
+  reddedilen: "Reddedilmiş",
 };
 
 const tabDescriptions = {
   tumu: "Tüm ilanları görüntüleyin, kategori ve arama ile filtreleyin",
-  bekleyen: "Kullanıcı veya import ile gelen ilanları inceleyin, onaylayın veya reddedin",
-  onayli: "Yayında olan onaylı ilanlar — vitrin ve arşiv işlemleri",
+  bekleyen: "Gelen ilanları inceleyin, onaylayın veya reddedin",
+  onayli: "Yayında olan onaylı ilanlar",
   reddedilen: "Reddedilen ilanlar ve red sebepleri",
 };
 
@@ -56,6 +57,7 @@ export default async function AdminListingsPage({
   ]);
 
   const categoryCounts = countByCategory(allForCounts);
+  const dbError = stats.dbError && isDbConfigured();
 
   const counts = {
     tumu: stats.total,
@@ -68,7 +70,7 @@ export default async function AdminListingsPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy">İlanlar</h1>
+          <h1 className="text-xl font-bold text-navy">Tüm İlanlar</h1>
           <p className="text-[13px] text-muted">{tabDescriptions[tab]}</p>
         </div>
         <a
@@ -78,6 +80,20 @@ export default async function AdminListingsPage({
           CSV indir
         </a>
       </div>
+
+      {dbError ? (
+        <div className="rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-[13px] text-rose-900">
+          <strong>Veritabanı güncellemesi gerekli.</strong> İlanlar yüklenemedi. Bilgisayarınızda{" "}
+          <code className="rounded bg-rose-100 px-1">npm run db:push</code> çalıştırın (Neon bağlantısı
+          ile). Bu komut eksik tabloları ve ilan numarası kolonunu ekler.
+        </div>
+      ) : null}
+
+      {!isDbConfigured() ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-[13px] text-amber-900">
+          Demo mod — canlı ilanlar için <code>DATABASE_URL</code> tanımlayın.
+        </div>
+      ) : null}
 
       <Suspense fallback={<div className="h-10 animate-pulse rounded bg-[#eee]" />}>
         <ListingsTabs active={tab} counts={counts} searchQuery={params.q} />

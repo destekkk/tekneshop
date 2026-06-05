@@ -28,6 +28,10 @@ export const actionLabels: Record<string, string> = {
   create_user: "Kullanıcı eklendi",
   update_user: "Kullanıcı güncellendi",
   delete_user: "Kullanıcı silindi",
+  create_listing_seller: "İlan veren eklendi",
+  update_listing_seller: "İlan veren güncellendi",
+  delete_listing_seller: "İlan veren silindi",
+  sync_listing_sellers: "İlan verenler senkron",
 };
 
 export async function getRecentActivity(limit = 30) {

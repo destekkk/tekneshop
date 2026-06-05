@@ -39,6 +39,12 @@ import {
 } from "@/lib/listings-store";
 import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import {
+  createListingSeller,
+  deleteListingSeller,
+  syncSellersFromListings,
+  updateListingSeller,
+} from "@/lib/sellers-store";
+import {
   createUser,
   deleteUser,
   getUserByEmail,
@@ -745,4 +751,71 @@ export async function deleteUserAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/kullanicilar");
+}
+
+export async function saveListingSellerAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+
+  const id = formData.get("id") ? Number(formData.get("id")) : null;
+  const name = String(formData.get("name") || "").trim();
+  if (!name) return;
+
+  const payload = {
+    name,
+    email: String(formData.get("email") || "") || undefined,
+    phone: String(formData.get("phone") || "") || undefined,
+    company: String(formData.get("company") || "") || undefined,
+    city: String(formData.get("city") || "") || undefined,
+    notes: String(formData.get("notes") || "") || undefined,
+    active: formData.get("active") === "on",
+  };
+
+  if (id) {
+    await updateListingSeller(id, payload);
+    await logActivity({
+      action: "update_listing_seller",
+      entityType: "listing_seller",
+      entityId: id,
+      adminEmail: session.email,
+      details: { name },
+    });
+  } else {
+    await createListingSeller(payload);
+    await logActivity({
+      action: "create_listing_seller",
+      entityType: "listing_seller",
+      adminEmail: session.email,
+      details: { name },
+    });
+  }
+
+  revalidatePath("/admin/ilan-verenler");
+}
+
+export async function deleteListingSellerAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteListingSeller(id);
+  await logActivity({
+    action: "delete_listing_seller",
+    entityType: "listing_seller",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/ilan-verenler");
+}
+
+export async function syncListingSellersAction() {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return { message: "Veritabanı bağlı değil." };
+  const result = await syncSellersFromListings();
+  await logActivity({
+    action: "sync_listing_sellers",
+    entityType: "listing_seller",
+    adminEmail: session.email,
+    details: result,
+  });
+  revalidatePath("/admin/ilan-verenler");
+  return { message: `${result.added} yeni ilan veren eklendi. Toplam: ${result.total}.` };
 }

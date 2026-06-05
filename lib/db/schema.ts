@@ -59,6 +59,19 @@ export const listings = pgTable("listings", {
   approvedAt: timestamp("approved_at", { withTimezone: true }),
 });
 
+export const listingSellers = pgTable("listing_sellers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  company: text("company"),
+  city: text("city"),
+  notes: text("notes"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const ads = pgTable("ads", {
   id: serial("id").primaryKey(),
   placement: adPlacementEnum("placement").notNull(),
@@ -207,6 +220,8 @@ export const emailCampaigns = pgTable("email_campaigns", {
   sentAt: timestamp("sent_at", { withTimezone: true }),
 });
 
+export type ListingSeller = typeof listingSellers.$inferSelect;
+export type NewListingSeller = typeof listingSellers.$inferInsert;
 export type Listing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
 export type Ad = typeof ads.$inferSelect;
