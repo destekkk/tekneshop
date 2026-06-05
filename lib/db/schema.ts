@@ -81,6 +81,22 @@ export const siteSettings = pgTable("site_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const navTypeEnum = pgEnum("nav_type", ["tekne", "magaza", "custom"]);
+
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull(),
+  label: text("label").notNull(),
+  parentId: integer("parent_id"),
+  href: text("href"),
+  navType: navTypeEnum("nav_type").notNull().default("magaza"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  featured: boolean("featured").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   action: text("action").notNull(),
@@ -95,3 +111,5 @@ export type Listing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
 export type Ad = typeof ads.$inferSelect;
 export type SiteSetting = typeof siteSettings.$inferSelect;
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;

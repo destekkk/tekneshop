@@ -8,9 +8,14 @@ import { getAdminSession, requireAdmin } from "@/lib/admin/session";
 import { deleteAd, upsertAd, type AdPlacement } from "@/lib/ads-store";
 import { isDbConfigured } from "@/lib/db";
 import {
+  createCategory,
+  deleteCategory,
+  slugify,
+  updateCategory,
+} from "@/lib/categories-store";
+import {
   createListing,
   deleteListing,
-  slugify,
   updateListingStatus,
 } from "@/lib/listings-store";
 
@@ -236,4 +241,63 @@ export async function submitPublicListingAction(formData: FormData) {
       ? "İlanınız incelenmek üzere gönderildi. Onaylandığında yayına alınacak."
       : "İlanınız yayına alındı.",
   };
+}
+
+export async function saveCategoryAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+
+  const id = formData.get("id") ? Number(formData.get("id")) : undefined;
+  const parentIdRaw = formData.get("parentId");
+  const parentId = parentIdRaw ? Number(parentIdRaw) : null;
+  const label = String(formData.get("label") || "").trim();
+  if (!label) return;
+
+  const payload = {
+    label,
+    slug: String(formData.get("slug") || slugify(label)),
+    navType: (formData.get("navType") as "tekne" | "magaza" | "custom") || "magaza",
+    href: String(formData.get("href") || "") || undefined,
+    sortOrder: Number(formData.get("sortOrder") || 0),
+    featured: formData.get("featured") === "on",
+  };
+
+  if (id) {
+    await updateCategory(id, {
+      label: payload.label,
+      slug: payload.slug,
+      href: payload.href ?? null,
+      sortOrder: payload.sortOrder,
+      featured: payload.featured,
+      active: formData.get("active") !== "off",
+    });
+  } else {
+    await createCategory({ ...payload, parentId });
+  }
+
+  await logActivity({
+    action: id ? "update_category" : "create_category",
+    entityType: "category",
+    entityId: id,
+    adminEmail: session.email,
+    details: { label },
+  });
+
+  revalidatePath("/admin/kategoriler");
+  revalidatePath("/");
+  revalidatePath("/magaza");
+}
+
+export async function deleteCategoryAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteCategory(id);
+  await logActivity({
+    action: "delete_category",
+    entityType: "category",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/kategoriler");
+  revalidatePath("/");
 }

@@ -4,11 +4,14 @@ import CsyProductCard from "@/components/CsyProductCard";
 import ListingWithAds from "@/components/ListingWithAds";
 import { csyProducts } from "@/lib/csy-products";
 import { getApprovedBoatListings } from "@/lib/listings-store";
-import { menuSections } from "@/lib/navigation";
+import { getMenuSections } from "@/lib/navigation";
 
 export default async function HomePage() {
+  const [menuSections, boatListings] = await Promise.all([
+    getMenuSections(),
+    getApprovedBoatListings(),
+  ]);
   const tekneSection = menuSections[0];
-  const boatListings = await getApprovedBoatListings();
 
   return (
     <main>

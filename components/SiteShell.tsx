@@ -1,13 +1,14 @@
 import CategorySidebar from "@/components/CategorySidebar";
 import TopAdBanner from "@/components/TopAdBanner";
 import { getActiveTopAd } from "@/lib/ads-store";
+import { getMenuSections } from "@/lib/navigation";
 
 export default async function SiteShell({ children }: { children: React.ReactNode }) {
-  const topAd = await getActiveTopAd();
+  const [topAd, menuSections] = await Promise.all([getActiveTopAd(), getMenuSections()]);
 
   return (
     <div className="w-full flex-1">
-      <CategorySidebar />
+      <CategorySidebar sections={menuSections} />
       <div className="min-w-0 bg-card ml-[220px] lg:ml-[240px]">
         <TopAdBanner
           href={topAd.href}

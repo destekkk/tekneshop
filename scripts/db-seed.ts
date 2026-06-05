@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import { resolve } from "node:path";
+import { seedCategoriesFromStatic } from "../lib/categories-store";
 import { seedDefaultAds } from "../lib/ads-store";
 import { defaultSiteConfig, saveSiteConfig } from "../lib/admin/settings";
 import { seedListingsFromStatic } from "../lib/listings-store";
@@ -13,8 +14,9 @@ async function main() {
   }
   await seedListingsFromStatic();
   await seedDefaultAds();
+  await seedCategoriesFromStatic();
   await saveSiteConfig(defaultSiteConfig);
-  console.log("✓ İlanlar, reklamlar ve site ayarları yüklendi.");
+  console.log("✓ İlanlar, kategoriler, reklamlar ve site ayarları yüklendi.");
 }
 
 main().catch((e) => {

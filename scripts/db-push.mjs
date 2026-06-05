@@ -25,6 +25,22 @@ const statements = [
   `DO $$ BEGIN
     CREATE TYPE ad_placement AS ENUM ('top_banner', 'inline_list');
   EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN
+    CREATE TYPE nav_type AS ENUM ('tekne', 'magaza', 'custom');
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS categories (
+    id SERIAL PRIMARY KEY,
+    slug TEXT NOT NULL,
+    label TEXT NOT NULL,
+    parent_id INTEGER,
+    href TEXT,
+    nav_type nav_type NOT NULL DEFAULT 'magaza',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT true,
+    featured BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
   `CREATE TABLE IF NOT EXISTS listings (
     id SERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,

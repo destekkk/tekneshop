@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { menuSections } from "@/lib/navigation";
+import type { NavSection } from "@/lib/navigation-types";
 import { STICKY_TOP } from "@/lib/layout-constants";
 
-export default function CategorySidebar() {
+type Props = {
+  sections: NavSection[];
+};
+
+export default function CategorySidebar({ sections }: Props) {
   const pathname = usePathname();
 
   return (
@@ -18,7 +22,7 @@ export default function CategorySidebar() {
         Tüm Kategoriler
       </p>
       <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
-        {menuSections.map((section) => {
+        {sections.map((section) => {
           const sectionActive =
             pathname === section.href || pathname.startsWith(`${section.href}/`);
 
