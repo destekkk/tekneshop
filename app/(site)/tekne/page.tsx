@@ -2,11 +2,13 @@ import BoatCard from "@/components/BoatCard";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
 import ListingWithAds from "@/components/ListingWithAds";
-import { boatListings } from "@/lib/boats";
+import { getApprovedBoatListings } from "@/lib/listings-store";
 
 export const metadata = { title: "Tekne İlanları | TekneShop" };
 
-export default function TeknePage() {
+export default async function TeknePage() {
+  const boatListings = await getApprovedBoatListings();
+
   return (
     <>
       <ListingPageHeader

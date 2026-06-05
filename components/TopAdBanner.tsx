@@ -5,13 +5,16 @@ type Props = {
   href?: string;
   imageSrc?: string;
   alt?: string;
+  title?: string;
+  subtitle?: string;
 };
 
-/** İçerik sütununda, header altında — sticky değil */
 export default function TopAdBanner({
   href = "/ilan-ver",
   imageSrc,
   alt = "Reklam — TekneShop vitrin",
+  title = "Tekne & marin ürünlerinizi burada öne çıkarın",
+  subtitle = "Sponsorlu alan",
 }: Props) {
   const content = imageSrc ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -19,11 +22,9 @@ export default function TopAdBanner({
   ) : (
     <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-navy via-[#0d6b7a] to-turquoise px-4 text-center text-white">
       <span className="text-[10px] font-semibold uppercase tracking-widest text-white/70">
-        Sponsorlu alan
+        {subtitle}
       </span>
-      <span className="text-sm font-bold sm:text-[15px]">
-        Tekne & marin ürünlerinizi burada öne çıkarın
-      </span>
+      <span className="text-sm font-bold sm:text-[15px]">{title}</span>
     </div>
   );
 

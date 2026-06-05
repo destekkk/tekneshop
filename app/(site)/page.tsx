@@ -2,12 +2,13 @@ import Link from "next/link";
 import BoatCard from "@/components/BoatCard";
 import CsyProductCard from "@/components/CsyProductCard";
 import ListingWithAds from "@/components/ListingWithAds";
-import { boatListings } from "@/lib/boats";
 import { csyProducts } from "@/lib/csy-products";
+import { getApprovedBoatListings } from "@/lib/listings-store";
 import { menuSections } from "@/lib/navigation";
 
-export default function HomePage() {
+export default async function HomePage() {
   const tekneSection = menuSections[0];
+  const boatListings = await getApprovedBoatListings();
 
   return (
     <main>

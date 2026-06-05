@@ -8,7 +8,7 @@ type Props<T> = {
   every?: number;
 };
 
-export default function ListingWithAds<T>({
+export default async function ListingWithAds<T>({
   items,
   renderItem,
   getKey,

@@ -3,7 +3,7 @@ import BoatCard from "@/components/BoatCard";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
 import ListingWithAds from "@/components/ListingWithAds";
-import { boatListings } from "@/lib/boats";
+import { filterApprovedBoats } from "@/lib/listings-store";
 import { isTekneFilterKey, tekneFilters, type TekneFilterKey } from "@/lib/tekne-routes";
 
 type Props = { params: Promise<{ filter: string }> };
@@ -23,11 +23,13 @@ export default async function TekneFilterPage({ params }: Props) {
   if (!isTekneFilterKey(filter)) notFound();
 
   const cfg = tekneFilters[filter];
-  const items = boatListings.filter((b) => {
-    if (cfg.condition && b.condition !== cfg.condition) return false;
-    if (cfg.boatTypes && !cfg.boatTypes.includes(b.boatType)) return false;
-    return true;
+  const all = await filterApprovedBoats({
+    condition: cfg.condition,
+    boatType: cfg.boatTypes?.length === 1 ? cfg.boatTypes[0] : undefined,
   });
+  const items = cfg.boatTypes && cfg.boatTypes.length > 1
+    ? all.filter((b) => cfg.boatTypes!.includes(b.boatType))
+    : all;
 
   return (
     <>

@@ -6,9 +6,9 @@ import {
   boatTypeLabels,
   conditionLabels,
   formatPrice,
-  getBoat,
   boatListings,
 } from "@/lib/boats";
+import { getBoatBySlug } from "@/lib/listings-store";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,13 +18,13 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const boat = getBoat(slug);
+  const boat = await getBoatBySlug(slug);
   return { title: boat ? `${boat.title} | TekneShop` : "İlan" };
 }
 
 export default async function BoatDetailPage({ params }: Props) {
   const { slug } = await params;
-  const boat = getBoat(slug);
+  const boat = await getBoatBySlug(slug);
   if (!boat) notFound();
 
   return (
