@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import AdminListingsTable from "@/components/admin/AdminListingsTable";
 import AdminPendingListings from "@/components/admin/AdminPendingListings";
@@ -73,12 +74,20 @@ export default async function AdminListingsPage({
           <h1 className="text-xl font-bold text-navy">Tüm İlanlar</h1>
           <p className="text-[13px] text-muted">{tabDescriptions[tab]}</p>
         </div>
-        <a
-          href="/api/admin/export/listings"
-          className="rounded border border-border px-3 py-2 text-[12px] font-semibold hover:bg-[#fafafa]"
-        >
-          CSV indir
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/ilan-verenler"
+            className="rounded border border-border px-3 py-2 text-[12px] font-semibold hover:bg-[#fafafa]"
+          >
+            İlan Verenler
+          </Link>
+          <a
+            href="/api/admin/export/listings"
+            className="rounded border border-border px-3 py-2 text-[12px] font-semibold hover:bg-[#fafafa]"
+          >
+            CSV indir
+          </a>
+        </div>
       </div>
 
       {dbError ? (

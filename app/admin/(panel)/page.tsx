@@ -6,14 +6,16 @@ import { getSiteConfig } from "@/lib/admin/settings";
 import { isDbConfigured } from "@/lib/db";
 import { getUnreadMessageCount } from "@/lib/messages-store";
 import { getAdminStats } from "@/lib/listings-store";
+import { getListingSellerCount } from "@/lib/sellers-store";
 
 export default async function AdminDashboardPage() {
   const session = await getAdminSession();
-  const [stats, config, unread, activity] = await Promise.all([
+  const [stats, config, unread, activity, sellerCount] = await Promise.all([
     getAdminStats(),
     getSiteConfig(),
     getUnreadMessageCount(),
     getRecentActivity(8),
+    getListingSellerCount(),
   ]);
 
   return (
@@ -46,6 +48,9 @@ export default async function AdminDashboardPage() {
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <Link href="/admin/ilanlar?tab=bekleyen" className="rounded border border-border px-3 py-2 text-[13px] hover:bg-[#fafafa]">
               Onay bekleyen ({stats.pending})
+            </Link>
+            <Link href="/admin/ilan-verenler" className="rounded border border-border px-3 py-2 text-[13px] hover:bg-[#fafafa]">
+              İlan verenler ({sellerCount})
             </Link>
             <Link href="/admin/mesajlar" className="rounded border border-border px-3 py-2 text-[13px] hover:bg-[#fafafa]">
               Mesajlar ({unread} yeni)

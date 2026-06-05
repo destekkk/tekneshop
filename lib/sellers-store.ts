@@ -4,8 +4,17 @@ import { listingSellers, listings, type ListingSeller } from "@/lib/db/schema";
 
 export async function getListingSellers() {
   if (!isDbConfigured()) return [] as ListingSeller[];
-  const db = getDb();
-  return db.select().from(listingSellers).orderBy(desc(listingSellers.updatedAt));
+  try {
+    const db = getDb();
+    return await db.select().from(listingSellers).orderBy(desc(listingSellers.updatedAt));
+  } catch {
+    return [];
+  }
+}
+
+export async function getListingSellerCount() {
+  const rows = await getListingSellers();
+  return rows.length;
 }
 
 export async function createListingSeller(data: {
