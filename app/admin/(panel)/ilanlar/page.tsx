@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import AdminListingsTable from "@/components/admin/AdminListingsTable";
 import AdminPendingListings from "@/components/admin/AdminPendingListings";
 import ListingCategoryTabs from "@/components/admin/ListingCategoryTabs";
-import ListingsTabs, { parseListingTab } from "@/components/admin/ListingsTabs";
+import ListingsTabs from "@/components/admin/ListingsTabs";
+import { parseListingTab } from "@/lib/listing-tabs";
 import { isDbConfigured } from "@/lib/db";
 import {
   countByCategory,

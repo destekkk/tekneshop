@@ -141,8 +141,9 @@ export const boatListings: BoatListing[] = [
   },
 ];
 
-export function formatPrice(tl: number) {
-  return `${tl.toLocaleString("tr-TR")} ₺`;
+export function formatPrice(tl?: number | null) {
+  const n = Number(tl ?? 0);
+  return `${n.toLocaleString("tr-TR")} ₺`;
 }
 
 export function getBoat(slug: string) {

@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-
-export type ListingTab = "tumu" | "bekleyen" | "onayli" | "reddedilen";
+import type { ListingTab } from "@/lib/listing-tabs";
 
 const tabs: { key: ListingTab; label: string }[] = [
   { key: "tumu", label: "Tüm İlanlar" },
@@ -68,9 +67,4 @@ export default function ListingsTabs({
       })}
     </div>
   );
-}
-
-export function parseListingTab(tab?: string): ListingTab {
-  if (tab === "bekleyen" || tab === "onayli" || tab === "reddedilen") return tab;
-  return "tumu";
 }

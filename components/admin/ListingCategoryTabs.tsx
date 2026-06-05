@@ -6,7 +6,7 @@ import {
   listingCategoryFilters,
   type ListingCategoryKey,
 } from "@/lib/listing-filters";
-import type { ListingTab } from "@/components/admin/ListingsTabs";
+import type { ListingTab } from "@/lib/listing-tabs";
 
 const groupLabels = {
   genel: null,
