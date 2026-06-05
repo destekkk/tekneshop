@@ -29,6 +29,7 @@ export const adPlacementEnum = pgEnum("ad_placement", [
 
 export const listings = pgTable("listings", {
   id: serial("id").primaryKey(),
+  listingNumber: integer("listing_number").unique(),
   slug: text("slug").notNull().unique(),
   type: listingTypeEnum("type").notNull().default("boat"),
   title: text("title").notNull(),
@@ -49,6 +50,7 @@ export const listings = pgTable("listings", {
   contactPhone: text("contact_phone"),
   isFeatured: boolean("is_featured").notNull().default(false),
   rejectionReason: text("rejection_reason"),
+  adminNotes: text("admin_notes"),
   feePaid: boolean("fee_paid").notNull().default(false),
   feeAmount: integer("fee_amount").notNull().default(0),
   source: text("source").default("manual"),
@@ -134,6 +136,30 @@ export const accountingEntries = pgTable("accounting_entries", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  message: text("message").notNull(),
+  linkUrl: text("link_url"),
+  linkLabel: text("link_label"),
+  tone: text("tone").notNull().default("info"),
+  active: boolean("active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  startsAt: timestamp("starts_at", { withTimezone: true }),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   action: text("action").notNull(),
@@ -144,6 +170,43 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  tcNo: text("tc_no").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const emailSubscribers = pgTable("email_subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  source: text("source").notNull().default("manual"),
+  subscribed: boolean("subscribed").notNull().default(true),
+  unsubscribeToken: text("unsubscribe_token").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
+});
+
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: serial("id").primaryKey(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text"),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  sentCount: integer("sent_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  status: text("status").notNull().default("draft"),
+  adminEmail: text("admin_email"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+});
+
 export type Listing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
 export type Ad = typeof ads.$inferSelect;
@@ -152,3 +215,10 @@ export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type AccountingEntry = typeof accountingEntries.$inferSelect;
 export type NewAccountingEntry = typeof accountingEntries.$inferInsert;
+export type Announcement = typeof announcements.$inferSelect;
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type EmailSubscriber = typeof emailSubscribers.$inferSelect;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;

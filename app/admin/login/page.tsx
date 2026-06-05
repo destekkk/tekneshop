@@ -27,7 +27,8 @@ export default async function AdminLoginPage({
             name="email"
             type="email"
             required
-            defaultValue="admin@tekneshop.com"
+            autoComplete="username"
+            placeholder="ornek@tekneshop.com"
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -44,8 +45,8 @@ export default async function AdminLoginPage({
           Giriş Yap
         </button>
         <p className="text-[11px] text-muted">
-          Varsayılan: admin@tekneshop.com / admin123 — Vercel&apos;de ADMIN_EMAIL ve ADMIN_PASSWORD
-          ile değiştirin.
+          Giriş bilgileri Vercel ortam değişkenlerindeki ADMIN_EMAIL ve ADMIN_PASSWORD ile
+          belirlenir.
         </p>
       </form>
     </div>

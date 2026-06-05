@@ -120,6 +120,31 @@ const statements = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS admin_notes TEXT`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS listing_number INTEGER UNIQUE`,
+  `UPDATE listings SET listing_number = 1000000 + id WHERE listing_number IS NULL`,
+  `CREATE TABLE IF NOT EXISTS announcements (
+    id SERIAL PRIMARY KEY,
+    message TEXT NOT NULL,
+    link_url TEXT,
+    link_label TEXT,
+    tone TEXT NOT NULL DEFAULT 'info',
+    active BOOLEAN NOT NULL DEFAULT true,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    starts_at TIMESTAMPTZ,
+    ends_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS contact_messages (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    read BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
   `CREATE TABLE IF NOT EXISTS activity_logs (
     id SERIAL PRIMARY KEY,
     action TEXT NOT NULL,
@@ -128,6 +153,40 @@ const statements = [
     admin_email TEXT,
     details JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    phone TEXT,
+    tc_no TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE TABLE IF NOT EXISTS email_subscribers (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    name TEXT,
+    source TEXT NOT NULL DEFAULT 'manual',
+    subscribed BOOLEAN NOT NULL DEFAULT true,
+    unsubscribe_token TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    unsubscribed_at TIMESTAMPTZ
+  )`,
+  `CREATE TABLE IF NOT EXISTS email_campaigns (
+    id SERIAL PRIMARY KEY,
+    subject TEXT NOT NULL,
+    body_html TEXT NOT NULL,
+    body_text TEXT,
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    sent_count INTEGER NOT NULL DEFAULT 0,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'draft',
+    admin_email TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    sent_at TIMESTAMPTZ
   )`,
 ];
 

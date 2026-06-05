@@ -1,4 +1,5 @@
 import AdForm from "@/components/admin/AdForm";
+import { formatAdSchedule, getAdScheduleStatus } from "@/lib/ad-schedule";
 import { getAllAds } from "@/lib/ads-store";
 import { isDbConfigured } from "@/lib/db";
 
@@ -29,25 +30,35 @@ export default async function AdminAdsPage() {
         </div>
         <div className="space-y-3">
           <h2 className="text-sm font-bold">Aktif reklamlar ({ads.length})</h2>
-          {ads.map((ad) => (
+          {ads.map((ad) => {
+            const status = getAdScheduleStatus(ad);
+            const statusClass =
+              status.tone === "success"
+                ? "text-emerald-600"
+                : status.tone === "warning"
+                  ? "text-amber-600"
+                  : status.tone === "danger"
+                    ? "text-rose-600"
+                    : "text-muted";
+            return (
             <div key={ad.id} className="rounded-lg border border-border bg-white p-3">
               <div className="mb-2 flex items-center justify-between text-[12px]">
                 <span className="font-semibold">
                   {ad.placement === "top_banner" ? "Üst banner" : `Liste içi #${ad.slot}`}
                 </span>
-                <span className={ad.active ? "text-emerald-600" : "text-muted"}>
-                  {ad.active ? "Aktif" : "Pasif"}
-                </span>
+                <span className={statusClass}>{status.label}</span>
               </div>
               <p className="text-[13px] font-medium">{ad.title}</p>
               <p className="text-[11px] text-muted">
                 {ad.impressions} gösterim · {ad.clicks} tıklama · öncelik {ad.priority}
               </p>
+              <p className="text-[11px] text-muted">{formatAdSchedule(ad)}</p>
               <div className="mt-3">
                 <AdForm ad={ad} />
               </div>
             </div>
-          ))}
+          );
+          })}
           {ads.length === 0 ? (
             <p className="text-[13px] text-muted">Henüz kayıtlı reklam yok.</p>
           ) : null}

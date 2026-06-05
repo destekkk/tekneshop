@@ -92,6 +92,10 @@ export default function IlanVerForm() {
           <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </div>
       </div>
+      <label className="flex items-start gap-2 text-[12px] text-muted">
+        <input name="emailConsent" type="checkbox" className="mt-0.5" />
+        TekneShop duyuru ve kampanya e-postaları almak istiyorum (isteğe bağlı)
+      </label>
       <p className="text-[12px] text-muted">
         Şu an ilan verme ücretsizdir. İlanınız admin onayından sonra yayına alınır.
       </p>

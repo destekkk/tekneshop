@@ -33,6 +33,65 @@ export default async function AdminSettingsPage() {
               className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
             />
           </div>
+          <div>
+            <label className="text-[12px] font-medium">Destek telefon</label>
+            <input
+              name="supportPhone"
+              defaultValue={config.supportPhone}
+              className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-[12px] font-medium">WhatsApp numarası</label>
+            <input
+              name="whatsappNumber"
+              defaultValue={config.whatsappNumber}
+              placeholder="905xxxxxxxxx"
+              className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-[11px] text-muted">
+              cokusta.com ile aynı numara kullanılabilir — aşağıdaki ön mesaj sayesinde hangi siteden
+              yazıldığı belli olur.
+            </p>
+          </div>
+          <div>
+            <label className="text-[12px] font-medium">WhatsApp ön mesajı (TekneShop)</label>
+            <textarea
+              name="whatsappPrefillMessage"
+              rows={3}
+              defaultValue={
+                config.whatsappPrefillMessage ||
+                "Merhaba, *TekneShop* (tekneshop.com) üzerinden yazıyorum."
+              }
+              placeholder="Merhaba, *TekneShop* (tekneshop.com) üzerinden yazıyorum."
+              className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-[11px] text-muted">
+              Kullanıcı WhatsApp&apos;a tıklayınca bu metin otomatik yazılır. cokusta.com&apos;da farklı
+              bir metin kullanın.
+            </p>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-[12px] font-medium">SEO açıklama</label>
+            <textarea
+              name="seoDescription"
+              rows={2}
+              defaultValue={config.seoDescription}
+              className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <input name="maintenanceMode" type="checkbox" defaultChecked={config.maintenanceMode} />
+            Bakım modu (site ziyaretçilere kapalı mesajı)
+          </label>
+          <div className="sm:col-span-2">
+            <label className="text-[12px] font-medium">Bakım mesajı</label>
+            <input
+              name="maintenanceMessage"
+              defaultValue={config.maintenanceMessage}
+              className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+            />
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <input
               name="moderationRequired"

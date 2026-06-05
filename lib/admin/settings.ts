@@ -17,11 +17,23 @@ export type SiteConfig = {
   maxPhotosPerListing: number;
   siteName: string;
   supportEmail: string;
+  supportPhone: string;
+  whatsappNumber: string;
+  whatsappPrefillMessage: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+  seoDescription: string;
 };
 
 export const defaultSiteConfig: SiteConfig = {
   siteName: "TekneShop",
   supportEmail: "destek@tekneshop.com",
+  supportPhone: "",
+  whatsappNumber: "",
+  whatsappPrefillMessage: "",
+  maintenanceMode: false,
+  maintenanceMessage: "Bakım çalışması yapılıyor. Kısa süre sonra tekrar deneyin.",
+  seoDescription: "Sıfır ve ikinci el tekne ilanları, yedek parça ve denizcilik ekipmanları.",
   moderationRequired: true,
   maxPhotosPerListing: 12,
   listingPricing: {

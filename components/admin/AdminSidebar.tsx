@@ -8,30 +8,47 @@ import {
   ClipboardList,
   CreditCard,
   FolderTree,
+  History,
   LayoutDashboard,
+  Mail,
+  Send,
   Megaphone,
   Wallet,
+  Radio,
   Settings,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import { adminLogoutAction } from "@/lib/admin/actions";
 
 const nav = [
   { href: "/admin", label: "Özet", icon: LayoutDashboard, exact: true },
-  { href: "/admin/ilanlar/bekleyen", label: "Onay Bekleyen", icon: ShieldCheck },
-  { href: "/admin/ilanlar", label: "Tüm İlanlar", icon: ClipboardList },
+  { href: "/admin/ilanlar", label: "İlanlar", icon: ClipboardList },
   { href: "/admin/kategoriler", label: "Kategoriler", icon: FolderTree },
   { href: "/admin/reklamlar", label: "Reklam Yönetimi", icon: Megaphone },
+  { href: "/admin/duyurular", label: "Duyurular", icon: Radio },
+  { href: "/admin/mesajlar", label: "Mesajlar", icon: Mail },
+  { href: "/admin/eposta", label: "E-posta Gönder", icon: Send },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: Users },
   { href: "/admin/odemeler", label: "Ödemeler & Paketler", icon: CreditCard },
   { href: "/admin/muhasebe", label: "Muhasebe", icon: Wallet },
   { href: "/admin/raporlar", label: "Raporlar", icon: BarChart3 },
+  { href: "/admin/aktivite", label: "Aktivite Günlüğü", icon: History },
   { href: "/admin/ayarlar", label: "Site Ayarları", icon: Settings },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  pendingCount = 0,
+  unreadCount = 0,
+}: {
+  pendingCount?: number;
+  unreadCount?: number;
+}) {
   const pathname = usePathname();
+
+  const badges: Record<string, number> = {
+    "/admin/ilanlar": pendingCount,
+    "/admin/mesajlar": unreadCount,
+  };
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-navy text-white lg:w-64">
@@ -60,7 +77,12 @@ export default function AdminSidebar() {
               }`}
             >
               <Icon size={16} />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {badges[item.href] ? (
+                <span className="rounded-full bg-turquoise px-1.5 py-0.5 text-[10px] font-bold text-navy">
+                  {badges[item.href]}
+                </span>
+              ) : null}
             </Link>
           );
         })}

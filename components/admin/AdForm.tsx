@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import AdScheduleFields from "@/components/admin/AdScheduleFields";
 import { deleteAdAction, saveAdAction } from "@/lib/admin/actions";
 import type { Ad } from "@/lib/db/schema";
 
@@ -85,6 +86,7 @@ export default function AdForm({ ad }: { ad?: Ad }) {
           Aktif
         </label>
       </div>
+      <AdScheduleFields ad={ad} />
       <div className="flex gap-2">
         <button
           type="submit"

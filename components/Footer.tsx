@@ -13,7 +13,11 @@ export default function Footer() {
         </div>
         <div className="text-[12px] text-muted">
           <p className="font-semibold text-foreground">İletişim</p>
-          <p className="mt-2">destek@tekneshop.com</p>
+          <p className="mt-2">
+            <a href="/iletisim" className="text-navy hover:underline">
+              Bize yazın →
+            </a>
+          </p>
         </div>
       </div>
     </footer>

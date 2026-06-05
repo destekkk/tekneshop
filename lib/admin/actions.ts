@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/admin/activity";
 import { getSiteConfig, saveSiteConfig, type SiteConfig } from "@/lib/admin/settings";
 import { getAdminSession, requireAdmin } from "@/lib/admin/session";
+import { parseAdScheduleFromForm } from "@/lib/ad-schedule";
 import { deleteAd, upsertAd, type AdPlacement } from "@/lib/ads-store";
 import { isDbConfigured } from "@/lib/db";
 import {
@@ -15,16 +16,45 @@ import {
   type AccountingType,
 } from "@/lib/accounting-store";
 import {
+  deleteAnnouncement,
+  upsertAnnouncement,
+} from "@/lib/announcements-store";
+import {
+  createContactMessage,
+  deleteMessage,
+  markMessageRead,
+} from "@/lib/messages-store";
+import {
   createCategory,
   deleteCategory,
   slugify,
   updateCategory,
 } from "@/lib/categories-store";
 import {
+  bulkApprovePending,
   createListing,
   deleteListing,
+  updateListingAdminNotes,
   updateListingStatus,
 } from "@/lib/listings-store";
+import { isValidTcKimlikNo } from "@/lib/auth/tc";
+import {
+  createUser,
+  deleteUser,
+  getUserByEmail,
+  getUserByTcNo,
+  updateUser,
+} from "@/lib/users-store";
+import { createCampaign, finishCampaign } from "@/lib/email/campaigns-store";
+import { isEmailConfigured } from "@/lib/email/config";
+import { sendBulkEmails, sendTransactionalEmail } from "@/lib/email/send";
+import { htmlToPlainText } from "@/lib/email/template";
+import {
+  deleteSubscriber,
+  getActiveRecipients,
+  syncSubscribersFromSources,
+  upsertSubscriber,
+} from "@/lib/email/subscribers-store";
 
 export async function adminLoginAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim();
@@ -126,6 +156,7 @@ export async function saveAdAction(formData: FormData) {
   if (!isDbConfigured()) return;
 
   const idRaw = formData.get("id");
+  const schedule = parseAdScheduleFromForm(formData);
   await upsertAd({
     id: idRaw ? Number(idRaw) : undefined,
     placement: formData.get("placement") as AdPlacement,
@@ -136,6 +167,8 @@ export async function saveAdAction(formData: FormData) {
     linkUrl: String(formData.get("linkUrl") || "/ilan-ver"),
     active: formData.get("active") === "on",
     priority: Number(formData.get("priority") || 0),
+    startsAt: schedule.startsAt,
+    endsAt: schedule.endsAt,
   });
 
   await logActivity({
@@ -170,6 +203,14 @@ export async function saveSettingsAction(formData: FormData) {
     ...current,
     siteName: String(formData.get("siteName") || current.siteName),
     supportEmail: String(formData.get("supportEmail") || current.supportEmail),
+    supportPhone: String(formData.get("supportPhone") || current.supportPhone),
+    whatsappNumber: String(formData.get("whatsappNumber") || current.whatsappNumber),
+    whatsappPrefillMessage: String(
+      formData.get("whatsappPrefillMessage") || current.whatsappPrefillMessage,
+    ),
+    maintenanceMode: formData.get("maintenanceMode") === "on",
+    maintenanceMessage: String(formData.get("maintenanceMessage") || current.maintenanceMessage),
+    seoDescription: String(formData.get("seoDescription") || current.seoDescription),
     moderationRequired: formData.get("moderationRequired") === "on",
     maxPhotosPerListing: Number(formData.get("maxPhotosPerListing") || 12),
     listingPricing: {
@@ -290,7 +331,17 @@ export async function submitPublicListingAction(formData: FormData) {
   }
 
   await createListing(listingData);
-  revalidatePath("/admin/ilanlar/bekleyen");
+
+  const contactEmail = listingData.contactEmail.trim();
+  if (contactEmail && formData.get("emailConsent") === "on") {
+    await upsertSubscriber({
+      email: contactEmail,
+      name: listingData.contactName || undefined,
+      source: "listing",
+    });
+  }
+
+  revalidatePath("/admin/ilanlar");
   revalidatePath("/tekne");
 
   return {
@@ -421,4 +472,277 @@ export async function deleteAccountingAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/muhasebe");
+}
+
+export async function bulkApproveAction() {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  const approved = await bulkApprovePending();
+  await logActivity({
+    action: "bulk_approve",
+    entityType: "listing",
+    adminEmail: session.email,
+    details: { count: approved.length },
+  });
+  revalidatePath("/admin");
+  revalidatePath("/admin/ilanlar");
+  revalidatePath("/tekne");
+}
+
+export async function saveListingNoteAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  const id = Number(formData.get("id"));
+  await updateListingAdminNotes(id, String(formData.get("adminNotes") || ""));
+  await logActivity({
+    action: "update_listing_note",
+    entityType: "listing",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/ilanlar");
+}
+
+export async function saveAnnouncementAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  const idRaw = formData.get("id");
+  await upsertAnnouncement({
+    id: idRaw ? Number(idRaw) : undefined,
+    message: String(formData.get("message")),
+    linkUrl: String(formData.get("linkUrl") || "") || undefined,
+    linkLabel: String(formData.get("linkLabel") || "") || undefined,
+    tone: String(formData.get("tone") || "info"),
+    active: formData.get("active") === "on",
+    sortOrder: Number(formData.get("sortOrder") || 0),
+  });
+  await logActivity({
+    action: idRaw ? "update_announcement" : "create_announcement",
+    entityType: "announcement",
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/duyurular");
+  revalidatePath("/");
+}
+
+export async function deleteAnnouncementAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteAnnouncement(id);
+  await logActivity({
+    action: "delete_announcement",
+    entityType: "announcement",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/duyurular");
+}
+
+export async function submitContactAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "").trim();
+  const subject = String(formData.get("subject") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+  if (!name || !email || !subject || !message) {
+    return { ok: false, message: "", error: "Tüm zorunlu alanları doldurun." };
+  }
+  if (!isDbConfigured()) {
+    return { ok: true, message: "Mesajınız alındı (demo mod).", error: "" };
+  }
+  await createContactMessage({
+    name,
+    email,
+    phone: String(formData.get("phone") || "") || undefined,
+    subject,
+    message,
+  });
+
+  if (formData.get("emailConsent") === "on") {
+    await upsertSubscriber({ email, name, source: "contact" });
+  }
+
+  return { ok: true, message: "Mesajınız iletildi. En kısa sürede dönüş yapılacak.", error: "" };
+}
+
+export async function markMessageReadAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await markMessageRead(id);
+  revalidatePath("/admin/mesajlar");
+}
+
+export async function deleteMessageAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteMessage(id);
+  revalidatePath("/admin/mesajlar");
+}
+
+export async function syncEmailSubscribersAction() {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) {
+    return { error: "Veritabanı bağlı değil." };
+  }
+  const result = await syncSubscribersFromSources();
+  await logActivity({
+    action: "sync_subscribers",
+    entityType: "email",
+    adminEmail: session.email,
+    details: result,
+  });
+  revalidatePath("/admin/eposta");
+  return {
+    message: `${result.added} yeni adres eklendi. Toplam aktif: ${result.total}.`,
+  };
+}
+
+export async function sendTestEmailAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isEmailConfigured()) {
+    return { error: "RESEND_API_KEY tanımlı değil." };
+  }
+
+  const config = await getSiteConfig();
+  const subject = String(formData.get("subject") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+  if (!subject || !body) return { error: "Konu ve mesaj zorunlu." };
+
+  const to = session.email || process.env.ADMIN_EMAIL || "admin@tekneshop.com";
+  const result = await sendTransactionalEmail({
+    to,
+    subject: `[TEST] ${subject}`,
+    body,
+    siteName: config.siteName,
+    supportEmail: config.supportEmail,
+  });
+
+  if (!result.ok) return { error: result.error };
+
+  await logActivity({
+    action: "send_test_email",
+    entityType: "email",
+    adminEmail: session.email,
+    details: { to, subject },
+  });
+
+  return { message: `Test e-postası ${to} adresine gönderildi.` };
+}
+
+export async function sendEmailCampaignAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return { error: "Veritabanı bağlı değil." };
+  if (!isEmailConfigured()) return { error: "RESEND_API_KEY tanımlı değil." };
+
+  const subject = String(formData.get("subject") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+  if (!subject || !body) return { error: "Konu ve mesaj zorunlu." };
+
+  const recipients = await getActiveRecipients();
+  if (recipients.length === 0) return { error: "Aktif abone yok. Önce listeyi senkronize edin." };
+
+  const config = await getSiteConfig();
+  const campaign = await createCampaign({
+    subject,
+    bodyHtml: body,
+    bodyText: htmlToPlainText(body),
+    recipientCount: recipients.length,
+    adminEmail: session.email,
+  });
+
+  const result = await sendBulkEmails(recipients, {
+    subject,
+    body,
+    siteName: config.siteName,
+    supportEmail: config.supportEmail,
+  });
+
+  if (campaign) {
+    await finishCampaign(campaign.id, result);
+  }
+
+  await logActivity({
+    action: "send_email_campaign",
+    entityType: "email",
+    entityId: campaign?.id,
+    adminEmail: session.email,
+    details: { subject, ...result },
+  });
+
+  revalidatePath("/admin/eposta");
+
+  return {
+    message: `Gönderim tamamlandı: ${result.sent} başarılı, ${result.failed} hata.`,
+    error: result.errors.length ? result.errors.join("; ") : undefined,
+  };
+}
+
+export async function deleteSubscriberAction(id: number) {
+  await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteSubscriber(id);
+  revalidatePath("/admin/eposta");
+}
+
+export async function saveUserAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+
+  const id = formData.get("id") ? Number(formData.get("id")) : null;
+  const name = String(formData.get("name") || "").trim();
+  const tcNo = String(formData.get("tcNo") || "").replace(/\s/g, "");
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const phone = String(formData.get("phone") || "").trim();
+  const password = String(formData.get("password") || "");
+  const active = formData.get("active") === "on";
+
+  if (!name || !tcNo || !email) return;
+  if (!isValidTcKimlikNo(tcNo)) return;
+
+  if (await getUserByEmail(email, id ?? undefined)) return;
+  if (await getUserByTcNo(tcNo, id ?? undefined)) return;
+
+  if (id) {
+    await updateUser(id, {
+      name,
+      email,
+      phone,
+      tcNo,
+      password: password || undefined,
+      active,
+    });
+    await logActivity({
+      action: "update_user",
+      entityType: "user",
+      entityId: id,
+      adminEmail: session.email,
+      details: { name, email },
+    });
+  } else {
+    if (!password || password.length < 6) return;
+    await createUser({ name, email, phone, tcNo, password });
+    await logActivity({
+      action: "create_user",
+      entityType: "user",
+      adminEmail: session.email,
+      details: { name, email },
+    });
+  }
+
+  revalidatePath("/admin/kullanicilar");
+}
+
+export async function deleteUserAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteUser(id);
+  await logActivity({
+    action: "delete_user",
+    entityType: "user",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/kullanicilar");
 }

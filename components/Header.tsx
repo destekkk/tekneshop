@@ -41,6 +41,12 @@ export default function Header() {
 
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <Link
+            href="/giris?tab=kayit"
+            className="whitespace-nowrap px-4 py-2.5 text-[14px] text-foreground hover:text-navy"
+          >
+            Kayıt Ol
+          </Link>
+          <Link
             href="/giris"
             className="whitespace-nowrap px-4 py-2.5 text-[14px] text-foreground hover:text-navy"
           >

@@ -1,4 +1,5 @@
-import { and, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { LISTING_NUMBER_START } from "@/lib/listing-number";
 import {
   boatListings,
   type BoatCondition,
@@ -11,8 +12,13 @@ import { listings, type Listing, type NewListing } from "@/lib/db/schema";
 
 export type ListingStatus = "pending" | "approved" | "rejected" | "archived";
 
+function staticBoatWithNumber(boat: BoatListing, index: number): BoatListing {
+  return { ...boat, listingNumber: LISTING_NUMBER_START + index };
+}
+
 function dbToBoat(row: Listing): BoatListing {
   return {
+    listingNumber: row.listingNumber ?? undefined,
     slug: row.slug,
     title: row.title,
     image: row.image,
@@ -28,7 +34,7 @@ function dbToBoat(row: Listing): BoatListing {
 }
 
 export async function getApprovedBoatListings(): Promise<BoatListing[]> {
-  if (!isDbConfigured()) return boatListings;
+  if (!isDbConfigured()) return boatListings.map(staticBoatWithNumber);
   try {
     const db = getDb();
     const rows = await db
@@ -36,16 +42,17 @@ export async function getApprovedBoatListings(): Promise<BoatListing[]> {
       .from(listings)
       .where(and(eq(listings.type, "boat"), eq(listings.status, "approved")))
       .orderBy(desc(listings.isFeatured), desc(listings.approvedAt), desc(listings.createdAt));
-    if (rows.length === 0) return boatListings;
+    if (rows.length === 0) return boatListings.map(staticBoatWithNumber);
     return rows.map(dbToBoat);
   } catch {
-    return boatListings;
+    return boatListings.map(staticBoatWithNumber);
   }
 }
 
 export async function getBoatBySlug(slug: string): Promise<BoatListing | undefined> {
   if (!isDbConfigured()) {
-    return boatListings.find((b) => b.slug === slug);
+    const idx = boatListings.findIndex((b) => b.slug === slug);
+    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
   }
   try {
     const db = getDb();
@@ -55,9 +62,11 @@ export async function getBoatBySlug(slug: string): Promise<BoatListing | undefin
       .where(and(eq(listings.slug, slug), eq(listings.type, "boat"), eq(listings.status, "approved")))
       .limit(1);
     if (rows[0]) return dbToBoat(rows[0]);
-    return boatListings.find((b) => b.slug === slug);
+    const idx = boatListings.findIndex((b) => b.slug === slug);
+    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
   } catch {
-    return boatListings.find((b) => b.slug === slug);
+    const idx = boatListings.findIndex((b) => b.slug === slug);
+    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
   }
 }
 
@@ -76,10 +85,14 @@ export async function filterApprovedBoats(opts: {
 export async function getAdminListings(opts?: {
   status?: ListingStatus;
   search?: string;
+  boatType?: string;
+  condition?: string;
+  type?: "boat" | "product" | "service";
 }) {
   if (!isDbConfigured()) {
-    return boatListings.map((b, i) => ({
+    let demo = boatListings.map((b, i) => ({
       id: i + 1,
+      listingNumber: LISTING_NUMBER_START + i,
       slug: b.slug,
       type: "boat" as const,
       title: b.title,
@@ -100,6 +113,7 @@ export async function getAdminListings(opts?: {
       contactPhone: null,
       isFeatured: Boolean(b.badge === "Vitrin"),
       rejectionReason: null,
+      adminNotes: null,
       feePaid: false,
       feeAmount: 0,
       source: "seed",
@@ -107,13 +121,44 @@ export async function getAdminListings(opts?: {
       updatedAt: new Date(),
       approvedAt: new Date(),
     }));
+    if (opts?.status) demo = demo.filter((r) => r.status === opts.status);
+    if (opts?.boatType) demo = demo.filter((r) => r.boatType === opts.boatType);
+    if (opts?.condition) demo = demo.filter((r) => r.condition === opts.condition);
+    if (opts?.type) demo = demo.filter((r) => r.type === opts.type);
+    if (opts?.search) {
+      const q = opts.search.toLowerCase();
+      demo = demo.filter((r) => {
+        if (/^\d+$/.test(q) && String(r.listingNumber).includes(q)) return true;
+        return (
+          r.title.toLowerCase().includes(q) ||
+          r.slug.toLowerCase().includes(q) ||
+          (r.location || "").toLowerCase().includes(q)
+        );
+      });
+    }
+    return demo;
   }
   const db = getDb();
   const filters = [];
   if (opts?.status) filters.push(eq(listings.status, opts.status));
+  if (opts?.boatType) filters.push(eq(listings.boatType, opts.boatType));
+  if (opts?.condition) filters.push(eq(listings.condition, opts.condition));
+  if (opts?.type) filters.push(eq(listings.type, opts.type));
   if (opts?.search) {
-    const q = `%${opts.search}%`;
-    filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
+    const raw = opts.search.trim();
+    const q = `%${raw}%`;
+    if (/^\d+$/.test(raw)) {
+      filters.push(
+        or(
+          ilike(listings.title, q),
+          ilike(listings.location, q),
+          ilike(listings.slug, q),
+          eq(listings.listingNumber, Number(raw)),
+        )!,
+      );
+    } else {
+      filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
+    }
   }
   return db
     .select()
@@ -177,9 +222,20 @@ export function slugify(text: string) {
     .replace(/^-|-$/g, "");
 }
 
+export async function nextListingNumber() {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      next: sql<number>`COALESCE(MAX(${listings.listingNumber}), ${LISTING_NUMBER_START - 1}) + 1`,
+    })
+    .from(listings);
+  return row?.next ?? LISTING_NUMBER_START;
+}
+
 export async function createListing(data: NewListing) {
   const db = getDb();
-  const [row] = await db.insert(listings).values(data).returning();
+  const listingNumber = data.listingNumber ?? (await nextListingNumber());
+  const [row] = await db.insert(listings).values({ ...data, listingNumber }).returning();
   return row;
 }
 
@@ -208,12 +264,39 @@ export async function deleteListing(id: number) {
   await db.delete(listings).where(eq(listings.id, id));
 }
 
+export async function bulkApprovePending() {
+  const db = getDb();
+  return db
+    .update(listings)
+    .set({ status: "approved", approvedAt: new Date(), updatedAt: new Date() })
+    .where(eq(listings.status, "pending"))
+    .returning();
+}
+
+export async function updateListingAdminNotes(id: number, notes: string) {
+  const db = getDb();
+  const [row] = await db
+    .update(listings)
+    .set({ adminNotes: notes, updatedAt: new Date() })
+    .where(eq(listings.id, id))
+    .returning();
+  return row;
+}
+
+export async function getAllListingsForExport() {
+  if (!isDbConfigured()) return [];
+  const db = getDb();
+  return db.select().from(listings).orderBy(desc(listings.createdAt));
+}
+
 export async function seedListingsFromStatic() {
   const db = getDb();
+  let num = LISTING_NUMBER_START;
   for (const boat of boatListings) {
     await db
       .insert(listings)
       .values({
+        listingNumber: num++,
         slug: boat.slug,
         type: "boat",
         title: boat.title,

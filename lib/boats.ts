@@ -8,6 +8,7 @@ export type BoatType =
   | "katamaran";
 
 export type BoatListing = {
+  listingNumber?: number;
   slug: string;
   title: string;
   image: string;

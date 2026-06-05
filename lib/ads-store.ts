@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lte, or } from "drizzle-orm";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { ads, type Ad } from "@/lib/db/schema";
 
@@ -17,6 +17,15 @@ const defaultInlineAd = {
   linkUrl: "/ilan-ver",
 };
 
+function activeAdFilters() {
+  const now = new Date();
+  return and(
+    eq(ads.active, true),
+    or(isNull(ads.startsAt), lte(ads.startsAt, now)),
+    or(isNull(ads.endsAt), gte(ads.endsAt, now)),
+  );
+}
+
 export async function getActiveTopAd(): Promise<{
   href: string;
   imageSrc?: string;
@@ -29,7 +38,7 @@ export async function getActiveTopAd(): Promise<{
     const rows = await db
       .select()
       .from(ads)
-      .where(and(eq(ads.placement, "top_banner"), eq(ads.active, true)))
+      .where(and(eq(ads.placement, "top_banner"), activeAdFilters()))
       .orderBy(desc(ads.priority))
       .limit(1);
     const ad = rows[0];
@@ -56,20 +65,14 @@ export async function getActiveInlineAd(slot: number): Promise<{
     const rows = await db
       .select()
       .from(ads)
-      .where(
-        and(
-          eq(ads.placement, "inline_list"),
-          eq(ads.active, true),
-          eq(ads.slot, slot),
-        ),
-      )
+      .where(and(eq(ads.placement, "inline_list"), eq(ads.slot, slot), activeAdFilters()))
       .orderBy(desc(ads.priority))
       .limit(1);
     if (!rows[0]) {
       const fallback = await db
         .select()
         .from(ads)
-        .where(and(eq(ads.placement, "inline_list"), eq(ads.active, true)))
+        .where(and(eq(ads.placement, "inline_list"), activeAdFilters()))
         .orderBy(desc(ads.priority))
         .limit(1);
       const ad = fallback[0];
@@ -102,6 +105,8 @@ export async function upsertAd(data: {
   linkUrl: string;
   active: boolean;
   priority: number;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
 }) {
   const db = getDb();
   if (data.id) {

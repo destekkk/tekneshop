@@ -8,10 +8,20 @@ type Props = {
   location: string;
   details: string;
   price: string;
+  listingNumber?: string;
   badges?: string[];
 };
 
-export default function ListingRow({ href, title, image, location, details, price, badges }: Props) {
+export default function ListingRow({
+  href,
+  title,
+  image,
+  location,
+  details,
+  price,
+  listingNumber,
+  badges,
+}: Props) {
   return (
     <Link
       href={href}
@@ -19,6 +29,9 @@ export default function ListingRow({ href, title, image, location, details, pric
     >
       <ListingThumbnail src={image} alt={title} />
       <div className="min-w-0 flex-1">
+        {listingNumber ? (
+          <p className="mb-1 text-[11px] font-bold text-navy">İlan No: {listingNumber}</p>
+        ) : null}
         {badges && badges.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-1">
             {badges.map((b) => (
