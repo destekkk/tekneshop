@@ -44,6 +44,7 @@ import {
   syncSellersFromListings,
   updateListingSeller,
 } from "@/lib/sellers-store";
+import { deleteOffer, updateOfferStatus } from "@/lib/offers-store";
 import {
   createUser,
   deleteUser,
@@ -818,4 +819,43 @@ export async function syncListingSellersAction() {
   });
   revalidatePath("/admin/ilan-verenler");
   return { message: `${result.added} yeni ilan veren eklendi. Toplam: ${result.total}.` };
+}
+
+export async function acceptOfferAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await updateOfferStatus(id, "accepted");
+  await logActivity({
+    action: "accept_offer",
+    entityType: "listing_offer",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/teklifler");
+}
+
+export async function rejectOfferAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await updateOfferStatus(id, "rejected");
+  await logActivity({
+    action: "reject_offer",
+    entityType: "listing_offer",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/teklifler");
+}
+
+export async function deleteOfferAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteOffer(id);
+  await logActivity({
+    action: "delete_offer",
+    entityType: "listing_offer",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/teklifler");
 }

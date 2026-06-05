@@ -101,6 +101,10 @@ export async function deleteUser(id: number) {
   await db.delete(users).where(eq(users.id, id));
 }
 
+export async function verifyUserPassword(password: string, passwordHash: string) {
+  return bcrypt.compare(password, passwordHash);
+}
+
 export async function getUserCount() {
   if (!isDbConfigured()) return 0;
   const db = getDb();

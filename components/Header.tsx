@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Anchor } from "lucide-react";
+import HeaderAuth from "@/components/HeaderAuth";
 import { HEADER_HEIGHT } from "@/lib/layout-constants";
 
 export default function Header() {
@@ -40,24 +42,9 @@ export default function Header() {
         </form>
 
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
-          <Link
-            href="/giris?tab=kayit"
-            className="whitespace-nowrap px-4 py-2.5 text-[14px] text-foreground hover:text-navy"
-          >
-            Kayıt Ol
-          </Link>
-          <Link
-            href="/giris"
-            className="whitespace-nowrap px-4 py-2.5 text-[14px] text-foreground hover:text-navy"
-          >
-            Giriş Yap
-          </Link>
-          <Link
-            href="/ilan-ver"
-            className="btn-cta whitespace-nowrap rounded-sm px-5 py-2.5 text-[14px]"
-          >
-            Ücretsiz İlan Ver
-          </Link>
+          <Suspense fallback={<span className="h-10 w-32 animate-pulse rounded bg-[#eee]" />}>
+            <HeaderAuth />
+          </Suspense>
         </div>
       </div>
     </header>

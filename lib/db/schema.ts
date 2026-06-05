@@ -206,6 +206,17 @@ export const emailSubscribers = pgTable("email_subscribers", {
   unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
 });
 
+export const listingOffers = pgTable("listing_offers", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull(),
+  userId: integer("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  message: text("message"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const emailCampaigns = pgTable("email_campaigns", {
   id: serial("id").primaryKey(),
   subject: text("subject").notNull(),
@@ -235,5 +246,7 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type ListingOffer = typeof listingOffers.$inferSelect;
+export type NewListingOffer = typeof listingOffers.$inferInsert;
 export type EmailSubscriber = typeof emailSubscribers.$inferSelect;
 export type EmailCampaign = typeof emailCampaigns.$inferSelect;

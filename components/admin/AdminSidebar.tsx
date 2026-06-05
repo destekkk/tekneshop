@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Mail,
   Send,
+  HandCoins,
   Megaphone,
   Wallet,
   Radio,
@@ -25,6 +26,7 @@ const nav = [
   { href: "/admin", label: "Özet", icon: LayoutDashboard, exact: true },
   { href: "/admin/ilanlar", label: "Tüm İlanlar", icon: ClipboardList },
   { href: "/admin/ilan-verenler", label: "İlan Verenler", icon: UserCircle },
+  { href: "/admin/teklifler", label: "Teklifler", icon: HandCoins },
   { href: "/admin/kategoriler", label: "Kategoriler", icon: FolderTree },
   { href: "/admin/reklamlar", label: "Reklam Yönetimi", icon: Megaphone },
   { href: "/admin/duyurular", label: "Duyurular", icon: Radio },
@@ -41,14 +43,17 @@ const nav = [
 export default function AdminSidebar({
   pendingCount = 0,
   unreadCount = 0,
+  pendingOfferCount = 0,
 }: {
   pendingCount?: number;
   unreadCount?: number;
+  pendingOfferCount?: number;
 }) {
   const pathname = usePathname();
 
   const badges: Record<string, number> = {
     "/admin/ilanlar": pendingCount,
+    "/admin/teklifler": pendingOfferCount,
     "/admin/mesajlar": unreadCount,
   };
 

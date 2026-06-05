@@ -32,6 +32,9 @@ export const actionLabels: Record<string, string> = {
   update_listing_seller: "İlan veren güncellendi",
   delete_listing_seller: "İlan veren silindi",
   sync_listing_sellers: "İlan verenler senkron",
+  accept_offer: "Teklif kabul edildi",
+  reject_offer: "Teklif reddedildi",
+  delete_offer: "Teklif silindi",
 };
 
 export async function getRecentActivity(limit = 30) {

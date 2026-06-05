@@ -1,10 +1,115 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { isValidTcKimlikNo } from "@/lib/auth/tc";
+import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
-import { createUser, getUserByEmail, getUserByTcNo } from "@/lib/users-store";
+import { createOffer, getUserOfferForListing } from "@/lib/offers-store";
+import { getListingBySlug } from "@/lib/listings-store";
+import {
+  createUser,
+  getUserByEmail,
+  getUserByTcNo,
+  verifyUserPassword,
+} from "@/lib/users-store";
+
+export async function loginUserAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "");
+  const redirectTo = String(formData.get("redirect") || "/");
+
+  if (!email || !password) {
+    return { ok: false, message: "", error: "E-posta ve şifre girin." };
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Giriş için veritabanı bağlantısı gerekli." };
+  }
+
+  const user = await getUserByEmail(email);
+  if (!user || !user.active) {
+    return { ok: false, message: "", error: "E-posta veya şifre hatalı." };
+  }
+
+  const valid = await verifyUserPassword(password, user.passwordHash);
+  if (!valid) {
+    return { ok: false, message: "", error: "E-posta veya şifre hatalı." };
+  }
+
+  const session = await getUserSession();
+  session.isLoggedIn = true;
+  session.userId = user.id;
+  session.email = user.email;
+  session.name = user.name;
+  await session.save();
+
+  const safeRedirect = redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
+  redirect(safeRedirect);
+}
+
+export async function logoutUserAction() {
+  const session = await getUserSession();
+  session.destroy();
+  redirect("/");
+}
+
+export async function submitOfferAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const listingId = Number(formData.get("listingId"));
+  const amountRaw = String(formData.get("amount") || "").replace(/\./g, "").replace(/,/g, "");
+  const amount = Number(amountRaw);
+  const message = String(formData.get("message") || "").trim();
+  const listingSlug = String(formData.get("listingSlug") || "");
+
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    const dest = listingSlug
+      ? `/giris?redirect=${encodeURIComponent(`/tekne/ilan/${listingSlug}`)}`
+      : "/giris";
+    redirect(dest);
+  }
+
+  if (!listingId || !Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, message: "", error: "Geçerli bir teklif tutarı girin." };
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Teklif gönderimi için veritabanı gerekli." };
+  }
+
+  const listing = await getListingBySlug(listingSlug);
+  if (!listing || listing.id !== listingId || listing.status !== "approved") {
+    return { ok: false, message: "", error: "Bu ilan için teklif verilemiyor." };
+  }
+
+  const existing = await getUserOfferForListing(session.userId, listingId);
+  if (existing && existing.status === "pending") {
+    return { ok: false, message: "", error: "Bu ilan için zaten bekleyen bir teklifiniz var." };
+  }
+
+  await createOffer({
+    listingId,
+    userId: session.userId,
+    amount,
+    message: message || undefined,
+  });
+
+  revalidatePath(`/tekne/ilan/${listingSlug}`);
+  revalidatePath("/admin/teklifler");
+
+  return {
+    ok: true,
+    message: "Teklifiniz iletildi. Satıcı veya yönetici inceleyecektir.",
+    error: "",
+  };
+}
 
 export async function registerUserAction(
   _prev: { ok: boolean; message: string; error: string },

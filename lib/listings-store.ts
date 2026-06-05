@@ -49,6 +49,17 @@ export async function getApprovedBoatListings(): Promise<BoatListing[]> {
   }
 }
 
+export async function getListingBySlug(slug: string) {
+  if (!isDbConfigured()) return null;
+  try {
+    const db = getDb();
+    const [row] = await db.select().from(listings).where(eq(listings.slug, slug)).limit(1);
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getBoatBySlug(slug: string): Promise<BoatListing | undefined> {
   if (!isDbConfigured()) {
     const idx = boatListings.findIndex((b) => b.slug === slug);

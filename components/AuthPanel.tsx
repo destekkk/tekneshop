@@ -6,7 +6,13 @@ import RegisterForm from "@/components/RegisterForm";
 
 type Tab = "login" | "register";
 
-export default function AuthPanel({ defaultTab = "login" }: { defaultTab?: Tab }) {
+export default function AuthPanel({
+  defaultTab = "login",
+  redirectTo = "/",
+}: {
+  defaultTab?: Tab;
+  redirectTo?: string;
+}) {
   const [tab, setTab] = useState<Tab>(defaultTab);
 
   return (
@@ -35,7 +41,7 @@ export default function AuthPanel({ defaultTab = "login" }: { defaultTab?: Tab }
           Kayıt Ol
         </button>
       </div>
-      {tab === "login" ? <LoginForm /> : <RegisterForm embedded />}
+      {tab === "login" ? <LoginForm embedded redirectTo={redirectTo} /> : <RegisterForm embedded />}
     </div>
   );
 }

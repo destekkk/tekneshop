@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import ListingThumbnail from "@/components/ListingThumbnail";
+import OfferForm from "@/components/OfferForm";
 import WhatsAppLink from "@/components/WhatsAppLink";
+import { getCurrentUser } from "@/lib/auth/user-session";
 import { getSiteConfig } from "@/lib/admin/settings";
 import { getSiteUrl } from "@/lib/email/config";
 import {
@@ -12,7 +14,8 @@ import {
   boatListings,
 } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
-import { getBoatBySlug } from "@/lib/listings-store";
+import { getUserOfferForListing } from "@/lib/offers-store";
+import { getBoatBySlug, getListingBySlug } from "@/lib/listings-store";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -28,9 +31,16 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function BoatDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [boat, config] = await Promise.all([getBoatBySlug(slug), getSiteConfig()]);
+  const [boat, config, listing, user] = await Promise.all([
+    getBoatBySlug(slug),
+    getSiteConfig(),
+    getListingBySlug(slug),
+    getCurrentUser(),
+  ]);
   if (!boat) notFound();
   const listingUrl = `${getSiteUrl()}/tekne/ilan/${slug}`;
+  const existingOffer =
+    user && listing ? await getUserOfferForListing(user.id, listing.id) : null;
 
   return (
     <div>
@@ -89,24 +99,37 @@ export default async function BoatDetailPage({ params }: Props) {
               )}
             </tbody>
           </table>
-          <div className="mt-8 flex flex-wrap gap-3">
-            {config.whatsappNumber ? (
-              <WhatsAppLink
-                number={config.whatsappNumber}
-                siteName={config.siteName}
-                prefillMessage={config.whatsappPrefillMessage || undefined}
-                context="listing"
+          <div className="mt-8 space-y-4">
+            {listing && listing.status === "approved" ? (
+              <OfferForm
+                listingId={listing.id}
+                listingSlug={slug}
                 listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-                variant="button"
-                label={`${config.siteName} üzerinden sor`}
+                listingPrice={boat.price}
+                user={user}
+                existingOffer={existingOffer}
               />
-            ) : (
-              <button type="button" className="btn-cta rounded-sm px-8 py-3 text-sm">
-                Satıcıya mesaj gönder (yakında)
-              </button>
-            )}
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
+              {config.whatsappNumber ? (
+                <WhatsAppLink
+                  number={config.whatsappNumber}
+                  siteName={config.siteName}
+                  prefillMessage={config.whatsappPrefillMessage || undefined}
+                  context="listing"
+                  listingTitle={boat.title}
+                  listingUrl={listingUrl}
+                  listingNumber={boat.listingNumber}
+                  variant="button"
+                  label={`${config.siteName} üzerinden sor`}
+                />
+              ) : (
+                <button type="button" className="btn-cta rounded-sm px-8 py-3 text-sm">
+                  Satıcıya mesaj gönder (yakında)
+                </button>
+              )}
+            </div>
           </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">

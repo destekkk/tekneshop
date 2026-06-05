@@ -6,10 +6,12 @@ export const metadata = { title: "Giriş Yap / Kayıt Ol | TekneShop" };
 export default async function GirisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; redirect?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, redirect } = await searchParams;
   const defaultTab = tab === "kayit" ? "register" : "login";
+  const redirectTo =
+    redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
 
   return (
     <>
@@ -22,7 +24,7 @@ export default async function GirisPage({
         ]}
       />
       <div className="mx-auto max-w-md p-6">
-        <AuthPanel defaultTab={defaultTab} />
+        <AuthPanel defaultTab={defaultTab} redirectTo={redirectTo} />
       </div>
     </>
   );
