@@ -3,7 +3,13 @@ import { getUnreadMessageCount } from "@/lib/messages-store";
 import { getAdminStats } from "@/lib/listings-store";
 
 export default async function AdminShell({ children }: { children: React.ReactNode }) {
-  const [stats, unread] = await Promise.all([getAdminStats(), getUnreadMessageCount()]);
+  let stats = { pending: 0 };
+  let unread = 0;
+  try {
+    [stats, unread] = await Promise.all([getAdminStats(), getUnreadMessageCount()]);
+  } catch {
+    // DB veya ağ hatasında panel çökmesin
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f4f6f8]">
