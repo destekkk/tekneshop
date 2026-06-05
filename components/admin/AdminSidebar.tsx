@@ -10,6 +10,7 @@ import {
   FolderTree,
   LayoutDashboard,
   Megaphone,
+  Wallet,
   Settings,
   ShieldCheck,
   Users,
@@ -24,6 +25,7 @@ const nav = [
   { href: "/admin/reklamlar", label: "Reklam Yönetimi", icon: Megaphone },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: Users },
   { href: "/admin/odemeler", label: "Ödemeler & Paketler", icon: CreditCard },
+  { href: "/admin/muhasebe", label: "Muhasebe", icon: Wallet },
   { href: "/admin/raporlar", label: "Raporlar", icon: BarChart3 },
   { href: "/admin/ayarlar", label: "Site Ayarları", icon: Settings },
 ];

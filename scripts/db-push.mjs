@@ -92,6 +92,34 @@ const statements = [
     value JSONB NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`,
+  `DO $$ BEGIN
+    CREATE TYPE accounting_type AS ENUM ('income', 'expense');
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN
+    CREATE TYPE accounting_category AS ENUM (
+      'listing_fee', 'featured_fee', 'package_sale', 'ad_revenue',
+      'refund', 'bank_fee', 'tax', 'salary', 'other'
+    );
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `DO $$ BEGIN
+    CREATE TYPE accounting_status AS ENUM ('pending', 'completed', 'cancelled');
+  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  `CREATE TABLE IF NOT EXISTS accounting_entries (
+    id SERIAL PRIMARY KEY,
+    type accounting_type NOT NULL,
+    category accounting_category NOT NULL DEFAULT 'other',
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'TRY',
+    description TEXT NOT NULL,
+    reference TEXT,
+    customer_name TEXT,
+    customer_email TEXT,
+    payment_method TEXT,
+    status accounting_status NOT NULL DEFAULT 'completed',
+    entry_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
   `CREATE TABLE IF NOT EXISTS activity_logs (
     id SERIAL PRIMARY KEY,
     action TEXT NOT NULL,

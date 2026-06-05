@@ -8,6 +8,13 @@ import { getAdminSession, requireAdmin } from "@/lib/admin/session";
 import { deleteAd, upsertAd, type AdPlacement } from "@/lib/ads-store";
 import { isDbConfigured } from "@/lib/db";
 import {
+  createAccountingEntry,
+  deleteAccountingEntry,
+  updateAccountingStatus,
+  type AccountingCategory,
+  type AccountingType,
+} from "@/lib/accounting-store";
+import {
   createCategory,
   deleteCategory,
   slugify,
@@ -300,4 +307,67 @@ export async function deleteCategoryAction(id: number) {
   });
   revalidatePath("/admin/kategoriler");
   revalidatePath("/");
+}
+
+export async function saveAccountingAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+
+  const description = String(formData.get("description") || "").trim();
+  const amount = Number(formData.get("amount") || 0);
+  if (!description || amount <= 0) return;
+
+  await createAccountingEntry({
+    type: formData.get("type") as AccountingType,
+    category: (formData.get("category") as AccountingCategory) || "other",
+    amount,
+    description,
+    reference: String(formData.get("reference") || "") || undefined,
+    customerName: String(formData.get("customerName") || "") || undefined,
+    customerEmail: String(formData.get("customerEmail") || "") || undefined,
+    paymentMethod: String(formData.get("paymentMethod") || "") || undefined,
+    status: (formData.get("status") as "pending" | "completed" | "cancelled") || "completed",
+    entryDate: formData.get("entryDate")
+      ? new Date(String(formData.get("entryDate")))
+      : new Date(),
+  });
+
+  await logActivity({
+    action: "create_accounting_entry",
+    entityType: "accounting",
+    adminEmail: session.email,
+    details: { description, amount },
+  });
+
+  revalidatePath("/admin/muhasebe");
+}
+
+export async function updateAccountingStatusAction(
+  id: number,
+  status: "pending" | "completed" | "cancelled",
+) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await updateAccountingStatus(id, status);
+  await logActivity({
+    action: "update_accounting_status",
+    entityType: "accounting",
+    entityId: id,
+    adminEmail: session.email,
+    details: { status },
+  });
+  revalidatePath("/admin/muhasebe");
+}
+
+export async function deleteAccountingAction(id: number) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+  await deleteAccountingEntry(id);
+  await logActivity({
+    action: "delete_accounting_entry",
+    entityType: "accounting",
+    entityId: id,
+    adminEmail: session.email,
+  });
+  revalidatePath("/admin/muhasebe");
 }

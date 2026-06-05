@@ -97,6 +97,43 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const accountingTypeEnum = pgEnum("accounting_type", ["income", "expense"]);
+
+export const accountingCategoryEnum = pgEnum("accounting_category", [
+  "listing_fee",
+  "featured_fee",
+  "package_sale",
+  "ad_revenue",
+  "refund",
+  "bank_fee",
+  "tax",
+  "salary",
+  "other",
+]);
+
+export const accountingStatusEnum = pgEnum("accounting_status", [
+  "pending",
+  "completed",
+  "cancelled",
+]);
+
+export const accountingEntries = pgTable("accounting_entries", {
+  id: serial("id").primaryKey(),
+  type: accountingTypeEnum("type").notNull(),
+  category: accountingCategoryEnum("category").notNull().default("other"),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("TRY"),
+  description: text("description").notNull(),
+  reference: text("reference"),
+  customerName: text("customer_name"),
+  customerEmail: text("customer_email"),
+  paymentMethod: text("payment_method"),
+  status: accountingStatusEnum("status").notNull().default("completed"),
+  entryDate: timestamp("entry_date", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
   action: text("action").notNull(),
@@ -113,3 +150,5 @@ export type Ad = typeof ads.$inferSelect;
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
+export type AccountingEntry = typeof accountingEntries.$inferSelect;
+export type NewAccountingEntry = typeof accountingEntries.$inferInsert;
