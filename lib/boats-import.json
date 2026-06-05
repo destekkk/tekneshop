@@ -1,0 +1,40 @@
+[
+  {
+    "slug": "azimut-55-fly-sifir",
+    "title": "Azimut 55 Fly — Teslim Hazır",
+    "image": "https://ornek.com/foto1.jpg",
+    "condition": "sifir",
+    "boatType": "motoryat",
+    "price": 48500000,
+    "year": 2025,
+    "lengthM": 16.8,
+    "location": "İstanbul, Tuzla",
+    "engine": "2×800 HP",
+    "badge": "Vitrin"
+  },
+  {
+    "slug": "beneteau-oceanis-46",
+    "title": "Beneteau Oceanis 46.1",
+    "image": "/boats/beneteau-oceanis-46.jpg",
+    "condition": "ikinci-el",
+    "boatType": "yelkenli",
+    "price": 12800000,
+    "year": 2019,
+    "lengthM": 14.6,
+    "location": "İzmir, Çeşme",
+    "engine": "Yanmar 57 HP"
+  },
+  {
+    "slug": "quicksilver-activ-675",
+    "title": "Quicksilver Activ 675 Weekend",
+    "image": "/boats/quicksilver-activ-675.jpg",
+    "condition": "ikinci-el",
+    "boatType": "motoryat",
+    "price": 2950000,
+    "year": 2021,
+    "lengthM": 6.75,
+    "location": "Muğla, Bodrum",
+    "engine": "Mercury 200 HP",
+    "badge": "Fiyat düştü"
+  }
+]

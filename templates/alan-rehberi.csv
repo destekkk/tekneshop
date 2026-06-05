@@ -1,0 +1,12 @@
+alan;zorunlu;aciklama;gecerli_degerler_ornek
+slug;Hayır;URL için benzersiz kod. Boş bırakılırsa başlıktan otomatik üretilebilir.;azimut-55-fly-sifir
+baslik;Evet;İlan başlığı (Facebook gönderi başlığı);Azimut 55 Fly — Teslim Hazır
+durum;Evet;Satış / kiralık durumu;sifir | ikinci-el | kiralik
+tekne_tipi;Evet;Tekne kategorisi;motoryat | yelkenli | sisme-bot | jet-ski | katamaran
+fiyat_tl;Evet;Fiyat (sadece rakam, nokta/₺ yok);48500000
+yil;Evet;Model yılı;2025
+uzunluk_m;Evet;Boy (metre, ondalık için virgül);16,8
+konum;Evet;Şehir veya marina;İstanbul, Tuzla
+motor;Hayır;Motor bilgisi;Mercury 200 HP
+rozet;Hayır;Küçük etiket (vitrin, fiyat düştü vb.);Vitrin | Fiyat düştü | Kiralık
+foto_url;Hayır;Fotoğraf linki (Facebook/CDN). Boşsa slug ile eşleşen dosya aranır.;https://...
