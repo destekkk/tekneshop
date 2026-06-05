@@ -94,12 +94,13 @@ export default async function AdminSettingsPage() {
               />
             </div>
           </div>
-          <div className="rounded bg-[#fafafa] p-3 text-[12px] text-muted">
-            Paketler (ileride):{" "}
-            {config.listingPricing.packages
-              .map((p) => `${p.name} — ${p.price} ₺`)
-              .join(" · ")}
-          </div>
+          <p className="text-[12px] text-muted">
+            Paket fiyatlarını düzenlemek için{" "}
+            <a href="/admin/odemeler" className="font-semibold text-navy hover:underline">
+              Ödemeler & Paketler
+            </a>{" "}
+            sayfasını kullanın.
+          </p>
         </section>
 
         <button

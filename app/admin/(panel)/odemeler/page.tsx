@@ -1,4 +1,7 @@
+import PackagePricingForm from "@/components/admin/PackagePricingForm";
+import { formatMoney } from "@/lib/accounting-store";
 import { getSiteConfig } from "@/lib/admin/settings";
+import { isDbConfigured } from "@/lib/db";
 
 export default async function AdminPaymentsPage() {
   const config = await getSiteConfig();
@@ -6,11 +9,11 @@ export default async function AdminPaymentsPage() {
     config.listingPricing;
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-xl font-bold text-navy">Ödemeler & Paketler</h1>
         <p className="text-[13px] text-muted">
-          Ücretli ilan ve paket satışı — şu an kapalı, ücretsiz dönemde tüm ilanlar bedava.
+          İlan paketi fiyatlarını, tek ilan ve vitrin ücretlerini buradan güncelleyin.
         </p>
       </div>
 
@@ -21,28 +24,24 @@ export default async function AdminPaymentsPage() {
         </div>
         <div className="rounded-lg border border-border bg-white p-4">
           <p className="text-[12px] text-muted">Tek ilan</p>
-          <p className="mt-1 text-lg font-bold">{pricePerListing} ₺</p>
+          <p className="mt-1 text-lg font-bold">{formatMoney(pricePerListing)}</p>
         </div>
         <div className="rounded-lg border border-border bg-white p-4">
           <p className="text-[12px] text-muted">Vitrin</p>
-          <p className="mt-1 text-lg font-bold">{featuredListingPrice} ₺</p>
+          <p className="mt-1 text-lg font-bold">{formatMoney(featuredListingPrice)}</p>
         </div>
       </div>
 
-      <section className="rounded-lg border border-border bg-white p-4">
-        <h2 className="text-sm font-bold">İlan paketleri (planlanan)</h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          {packages.map((pkg) => (
-            <div key={pkg.name} className="rounded border border-border p-3">
-              <p className="font-semibold">{pkg.name}</p>
-              <p className="text-[13px] text-muted">{pkg.count} ilan</p>
-              <p className="mt-1 font-bold">{pkg.price} ₺</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-[12px] text-muted">
-          Ödeme altyapısı (iyzico / PayTR / Stripe) entegrasyonu sonraki aşamada eklenecek.
-          Şimdilik <strong>enabled={String(enabled)}</strong> — ücret tahsil edilmiyor.
+      <PackagePricingForm pricing={config.listingPricing} dbConnected={isDbConfigured()} />
+
+      <section className="rounded-lg border border-dashed border-border bg-white p-4 text-[12px] text-muted">
+        <p>
+          <strong>Önizleme — aktif paketler:</strong>{" "}
+          {packages.map((p) => `${p.name} (${p.count} ilan, ${p.price} ₺)`).join(" · ") || "Yok"}
+        </p>
+        <p className="mt-2">
+          Ödeme altyapısı (iyzico / PayTR) sonraki aşamada bağlanacak. Şu an ücret tahsilatı:{" "}
+          <strong>{enabled ? "açık (ayar)" : "kapalı"}</strong>
         </p>
       </section>
     </div>

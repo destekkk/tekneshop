@@ -188,6 +188,57 @@ export async function saveSettingsAction(formData: FormData) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/ayarlar");
+  revalidatePath("/admin/odemeler");
+}
+
+export async function savePackagesPricingAction(formData: FormData) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) return;
+
+  const current = await getSiteConfig();
+  let packages = current.listingPricing.packages;
+
+  const packagesJson = String(formData.get("packagesJson") || "");
+  if (packagesJson) {
+    try {
+      const parsed = JSON.parse(packagesJson) as { name: string; count: number; price: number }[];
+      if (Array.isArray(parsed)) {
+        packages = parsed
+          .filter((p) => p.name?.trim())
+          .map((p) => ({
+            name: String(p.name).trim(),
+            count: Math.max(1, Number(p.count) || 1),
+            price: Math.max(0, Number(p.price) || 0),
+          }));
+      }
+    } catch {
+      // keep existing packages
+    }
+  }
+
+  const config: SiteConfig = {
+    ...current,
+    listingPricing: {
+      ...current.listingPricing,
+      enabled: formData.get("pricingEnabled") === "on",
+      freePeriod: formData.get("freePeriod") === "on",
+      pricePerListing: Number(formData.get("pricePerListing") || current.listingPricing.pricePerListing),
+      featuredListingPrice: Number(
+        formData.get("featuredListingPrice") || current.listingPricing.featuredListingPrice,
+      ),
+      packages,
+    },
+  };
+
+  await saveSiteConfig(config);
+  await logActivity({
+    action: "update_package_pricing",
+    entityType: "settings",
+    adminEmail: session.email,
+    details: { packages: packages.length },
+  });
+  revalidatePath("/admin/odemeler");
+  revalidatePath("/admin/ayarlar");
 }
 
 export async function submitListingFormAction(
