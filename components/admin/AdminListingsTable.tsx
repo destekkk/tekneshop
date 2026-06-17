@@ -1,7 +1,9 @@
+import Link from "next/link";
 import ListingActions from "@/components/admin/ListingActions";
 import ListingNoteForm from "@/components/admin/ListingNoteForm";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { boatTypeLabel, conditionLabel, formatPrice } from "@/lib/boats";
+import { parseListingCurrency } from "@/lib/listing-currency";
 import { formatListingNumber } from "@/lib/listing-number";
 import type { Listing } from "@/lib/db/schema";
 
@@ -28,7 +30,12 @@ export default function AdminListingsTable({ rows }: { rows: Listing[] }) {
                 {formatListingNumber(row.listingNumber)}
               </td>
               <td className="px-3 py-3">
-                <p className="font-semibold">{row.title}</p>
+                <Link
+                  href={`/admin/ilanlar/${row.id}`}
+                  className="font-semibold hover:text-navy hover:underline"
+                >
+                  {row.title}
+                </Link>
                 <p className="text-[11px] text-muted">{row.slug}</p>
                 {row.rejectionReason ? (
                   <p className="mt-1 text-[11px] text-rose-600">Red: {row.rejectionReason}</p>
@@ -61,7 +68,9 @@ export default function AdminListingsTable({ rows }: { rows: Listing[] }) {
                   </span>
                 ) : null}
               </td>
-              <td className="px-3 py-3">{formatPrice(row.price)}</td>
+              <td className="px-3 py-3">
+                {formatPrice(row.price, parseListingCurrency(row.currency))}
+              </td>
               <td className="px-3 py-3">{row.location || "—"}</td>
               <td className="px-3 py-3">{row.source || "—"}</td>
               <td className="px-3 py-3">

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import ListingImageUpload from "@/components/ListingImageUpload";
 import BoatListingFields from "@/components/BoatListingFields";
+import { fieldValue, isFieldChecked, preserveFormKey } from "@/lib/form-preserve";
 import { submitListingFormAction } from "@/lib/admin/actions";
 
 const initial = { ok: false, message: "", error: "" };
@@ -16,19 +17,36 @@ export default function IlanVerForm({
 }: {
   user: { name: string; email: string; phone?: string | null };
 }) {
-  const [state, action, pending] = useActionState(submitListingFormAction, initial);
+  const [state, dispatch, pending] = useActionState(submitListingFormAction, initial);
+  const [values, setValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const formKey = preserveFormKey(state, values);
 
   function handleSubmit(formData: FormData) {
+    const snapshot: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      if (value instanceof File) return;
+      snapshot[key] = String(value);
+    });
+    setValues(snapshot);
     formData.delete("images");
     for (const file of imageFiles) {
       formData.append("images", file);
     }
-    action(formData);
+    dispatch(formData);
   }
 
+  const yearValue = fieldValue(values, "year", String(DEFAULT_YEAR));
+  const currencyValue = fieldValue(values, "currency", "TRY");
+  const showPhoneYes = values.showContactPhone ? values.showContactPhone === "yes" : false;
+  const showPhoneNo = values.showContactPhone ? values.showContactPhone === "no" : !values.showContactPhone;
+
   return (
-    <form action={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-6">
+    <form
+      key={formKey}
+      action={handleSubmit}
+      className="space-y-4 rounded-xl border border-border bg-card p-6"
+    >
       {state.message ? (
         <p className="rounded bg-emerald-50 px-3 py-2 text-[13px] text-emerald-800">{state.message}</p>
       ) : null}
@@ -42,6 +60,7 @@ export default function IlanVerForm({
           name="title"
           required
           placeholder="Örn. 2021 model motoryat"
+          defaultValue={fieldValue(values, "title")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -50,20 +69,40 @@ export default function IlanVerForm({
         <textarea
           name="description"
           rows={4}
+          defaultValue={fieldValue(values, "description")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
-      <BoatListingFields />
+      <BoatListingFields initialValues={values} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Fiyat (₺)</label>
-          <input name="price" type="number" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <label className="text-sm font-medium">Fiyat *</label>
+          <div className="mt-1 flex gap-2">
+            <input
+              name="price"
+              type="number"
+              required
+              min={1}
+              placeholder="Örn. 1500000"
+              defaultValue={fieldValue(values, "price")}
+              className="min-w-0 flex-1 rounded-lg border border-border px-3 py-2 text-sm"
+            />
+            <select
+              name="currency"
+              defaultValue={currencyValue}
+              className="w-[108px] rounded-lg border border-border bg-white px-2 py-2 text-sm"
+            >
+              <option value="TRY">₺ TL</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+            </select>
+          </div>
         </div>
         <div>
           <label className="text-sm font-medium">Yıl</label>
           <select
             name="year"
-            defaultValue={DEFAULT_YEAR}
+            defaultValue={yearValue}
             className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
           >
             {yearOptions.map((year) => (
@@ -77,16 +116,29 @@ export default function IlanVerForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium">Boy (m)</label>
-          <input name="lengthM" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input
+            name="lengthM"
+            defaultValue={fieldValue(values, "lengthM")}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="text-sm font-medium">Konum</label>
-          <input name="location" placeholder="İstanbul, Tuzla" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input
+            name="location"
+            placeholder="İstanbul, Tuzla"
+            defaultValue={fieldValue(values, "location")}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
         </div>
       </div>
       <div>
         <label className="text-sm font-medium">Motor</label>
-        <input name="engine" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+        <input
+          name="engine"
+          defaultValue={fieldValue(values, "engine")}
+          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+        />
       </div>
       <ListingImageUpload onFilesChange={setImageFiles} />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -94,7 +146,7 @@ export default function IlanVerForm({
           <label className="text-sm font-medium">Ad Soyad</label>
           <input
             name="contactName"
-            defaultValue={user.name}
+            defaultValue={fieldValue(values, "contactName", user.name)}
             readOnly
             className="mt-1 w-full rounded-lg border border-border bg-[#fafafa] px-3 py-2 text-sm"
           />
@@ -104,7 +156,7 @@ export default function IlanVerForm({
           <input
             name="contactPhone"
             type="tel"
-            defaultValue={user.phone || ""}
+            defaultValue={fieldValue(values, "contactPhone", user.phone || "")}
             placeholder="05xx xxx xx xx"
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
@@ -114,7 +166,7 @@ export default function IlanVerForm({
           <input
             name="contactEmail"
             type="email"
-            defaultValue={user.email}
+            defaultValue={fieldValue(values, "contactEmail", user.email)}
             readOnly
             className="mt-1 w-full rounded-lg border border-border bg-[#fafafa] px-3 py-2 text-sm"
           />
@@ -124,14 +176,26 @@ export default function IlanVerForm({
       <fieldset className="space-y-2 rounded-lg border border-border bg-[#fafafa] p-4">
         <legend className="px-1 text-sm font-medium">İletişim tercihi</legend>
         <label className="flex cursor-pointer items-start gap-2 text-[13px]">
-          <input type="radio" name="showContactPhone" value="yes" className="mt-1" />
+          <input
+            type="radio"
+            name="showContactPhone"
+            value="yes"
+            defaultChecked={showPhoneYes}
+            className="mt-1"
+          />
           <span>
             <strong>Telefonum ilanda görünsün</strong>
             <span className="block text-[12px] text-muted">Ziyaretçiler numaranızı doğrudan görebilir.</span>
           </span>
         </label>
         <label className="flex cursor-pointer items-start gap-2 text-[13px]">
-          <input type="radio" name="showContactPhone" value="no" defaultChecked className="mt-1" />
+          <input
+            type="radio"
+            name="showContactPhone"
+            value="no"
+            defaultChecked={showPhoneNo}
+            className="mt-1"
+          />
           <span>
             <strong>Telefonumu gizle, mesajla ulaşılsın</strong>
             <span className="block text-[12px] text-muted">
@@ -141,7 +205,12 @@ export default function IlanVerForm({
         </label>
       </fieldset>
       <label className="flex items-start gap-2 text-[12px] text-muted">
-        <input name="emailConsent" type="checkbox" className="mt-0.5" />
+        <input
+          name="emailConsent"
+          type="checkbox"
+          defaultChecked={isFieldChecked(values, "emailConsent")}
+          className="mt-0.5"
+        />
         TekneShop duyuru ve kampanya e-postaları almak istiyorum (isteğe bağlı)
       </label>
       <p className="text-[12px] text-muted">

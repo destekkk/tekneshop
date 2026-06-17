@@ -34,11 +34,14 @@ import {
   bulkApprovePending,
   createListing,
   deleteListing,
+  getListingById,
   slugify,
+  updateListing,
   updateListingAdminNotes,
   updateListingStatus,
 } from "@/lib/listings-store";
 import { collectListingImageFiles, uploadListingImages } from "@/lib/listing-images";
+import { parseListingPriceFromForm } from "@/lib/listing-currency";
 import {
   brandFormOptions,
   modelFormOptions,
@@ -112,6 +115,8 @@ export async function approveListingAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin");
+  revalidatePath("/admin/ilanlar");
+  revalidatePath(`/admin/ilanlar/${id}`);
   revalidatePath("/tekne");
   revalidatePath("/");
 }
@@ -128,6 +133,8 @@ export async function rejectListingAction(id: number, reason: string) {
     details: { reason },
   });
   revalidatePath("/admin");
+  revalidatePath("/admin/ilanlar");
+  revalidatePath(`/admin/ilanlar/${id}`);
 }
 
 export async function archiveListingAction(id: number) {
@@ -141,6 +148,8 @@ export async function archiveListingAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin");
+  revalidatePath("/admin/ilanlar");
+  revalidatePath(`/admin/ilanlar/${id}`);
   revalidatePath("/tekne");
 }
 
@@ -170,6 +179,89 @@ export async function toggleFeaturedAction(id: number, featured: boolean) {
   });
   revalidatePath("/admin");
   revalidatePath("/tekne");
+}
+
+export async function updateListingAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Veritabanı bağlantısı gerekli." };
+  }
+
+  const id = Number(formData.get("id"));
+  if (!id) return { ok: false, message: "", error: "Geçersiz ilan." };
+
+  const existing = await getListingById(id);
+  if (!existing) return { ok: false, message: "", error: "İlan bulunamadı." };
+
+  const title = String(formData.get("title") || "").trim();
+  if (!title) return { ok: false, message: "", error: "Başlık zorunlu." };
+
+  const showContactPhone = formData.get("showContactPhone") === "yes";
+  const contactPhone = String(formData.get("contactPhone") || "").trim();
+  if (showContactPhone && !contactPhone) {
+    return { ok: false, message: "", error: "Telefon görünür seçildiyse numara girin." };
+  }
+
+  let image = existing.image;
+  let images = existing.images ?? [];
+  const imageFiles = collectListingImageFiles(formData);
+  if (imageFiles.length > 0) {
+    try {
+      const uploaded = await uploadListingImages(imageFiles, existing.slug);
+      image = uploaded[0] || image;
+      images = uploaded.slice(1);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Fotoğraflar yüklenemedi.";
+      return { ok: false, message: "", error: msg };
+    }
+  }
+
+  const priceResult = parseListingPriceFromForm(formData);
+  if ("error" in priceResult) {
+    return { ok: false, message: "", error: priceResult.error };
+  }
+
+  await updateListing(id, {
+    title,
+    description: String(formData.get("description") || "") || null,
+    condition: resolveConditionStorage(formData),
+    boatType: resolveBoatTypeStorage(formData),
+    brand:
+      resolveSelectWithOther(formData, "brand", "brandOther", brandFormOptions) || null,
+    model:
+      resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || null,
+    price: priceResult.price,
+    currency: priceResult.currency,
+    year: Number(formData.get("year") || 2026),
+    lengthM: String(formData.get("lengthM") || "") || null,
+    location: String(formData.get("location") || "") || null,
+    engine: String(formData.get("engine") || "") || null,
+    contactName: String(formData.get("contactName") || "") || null,
+    contactEmail: String(formData.get("contactEmail") || "") || null,
+    contactPhone: contactPhone || null,
+    showContactPhone,
+    image,
+    images,
+  });
+
+  await logActivity({
+    action: "update_listing",
+    entityType: "listing",
+    entityId: id,
+    adminEmail: session.email,
+  });
+
+  revalidatePath("/admin/ilanlar");
+  revalidatePath(`/admin/ilanlar/${id}`);
+  revalidatePath("/tekne");
+  if (existing.status === "approved") {
+    revalidatePath(`/tekne/ilan/${existing.slug}`);
+  }
+
+  return { ok: true, message: "İlan güncellendi.", error: "" };
 }
 
 export async function saveAdAction(formData: FormData) {
@@ -409,6 +501,11 @@ export async function submitPublicListingAction(formData: FormData) {
     }
   }
 
+  const priceResult = parseListingPriceFromForm(formData);
+  if ("error" in priceResult) {
+    return { error: priceResult.error };
+  }
+
   const listingData = {
     slug,
     type: "boat" as const,
@@ -421,7 +518,8 @@ export async function submitPublicListingAction(formData: FormData) {
       resolveSelectWithOther(formData, "brand", "brandOther", brandFormOptions) || undefined,
     model:
       resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || undefined,
-    price: Number(formData.get("price") || 0),
+    price: priceResult.price,
+    currency: priceResult.currency,
     year: Number(formData.get("year") || 2026),
     lengthM: String(formData.get("lengthM") || ""),
     location: String(formData.get("location") || ""),

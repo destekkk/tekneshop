@@ -125,6 +125,7 @@ const statements = [
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS show_contact_phone BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS brand TEXT`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS model TEXT`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'TRY'`,
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS report_reason TEXT`,
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ`,
@@ -227,6 +228,38 @@ const statements = [
     admin_email TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     sent_at TIMESTAMPTZ
+  )`,
+  `CREATE TABLE IF NOT EXISTS user_favorites (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+    listing_slug TEXT,
+    product_slug TEXT,
+    product_name TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS user_favorites_user_listing_idx ON user_favorites (user_id, listing_id) WHERE listing_id IS NOT NULL`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS user_favorites_user_product_idx ON user_favorites (user_id, product_slug) WHERE product_slug IS NOT NULL`,
+  `CREATE TABLE IF NOT EXISTS listing_price_history (
+    id SERIAL PRIMARY KEY,
+    listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    price INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'TRY',
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    source TEXT NOT NULL DEFAULT 'create'
+  )`,
+  `CREATE TABLE IF NOT EXISTS favorite_price_alerts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    listing_title TEXT,
+    listing_slug TEXT,
+    old_price INTEGER NOT NULL,
+    new_price INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'TRY',
+    message TEXT NOT NULL,
+    read BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`,
 ];
 

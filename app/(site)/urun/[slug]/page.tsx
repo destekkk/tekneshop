@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
+import FavoriteButton from "@/components/FavoriteButton";
 import ListingThumbnail from "@/components/ListingThumbnail";
+import { getCurrentUser } from "@/lib/auth/user-session";
 import { magazaHref } from "@/lib/csy-categories";
 import { formatPrice, getCsyProduct } from "@/lib/csy-products";
 import { csyProducts } from "@/lib/csy-products";
+import { isDbConfigured } from "@/lib/db";
+import { isProductFavorited } from "@/lib/favorites-store";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -22,6 +26,10 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const product = getCsyProduct(slug);
   if (!product) notFound();
+
+  const user = await getCurrentUser();
+  const isFavorited =
+    user && isDbConfigured() ? await isProductFavorited(user.id, slug) : false;
 
   return (
     <div>
@@ -53,7 +61,17 @@ export default async function ProductPage({ params }: Props) {
             </span>
           )}
           <h1 className="mt-2 text-[20px] font-bold">{product.name}</h1>
-          <p className="mt-4 text-[22px] font-bold text-navy">{formatPrice(product.price)}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <p className="text-[22px] font-bold text-navy">{formatPrice(product.price)}</p>
+            {isDbConfigured() ? (
+              <FavoriteButton
+                kind="product"
+                slug={product.slug}
+                productName={product.name}
+                initialFavorited={isFavorited}
+              />
+            ) : null}
+          </div>
           <p className="mt-6 text-[13px] leading-relaxed text-muted">{product.description}</p>
           <button type="button" className="btn-cta mt-6 rounded-sm px-8 py-3 text-sm">
             Sepete ekle (yakında)

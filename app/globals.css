@@ -59,6 +59,18 @@ body {
   background: var(--cta-hover);
 }
 
+/* TekneShop marka rengi — header Ara / İlan Ver */
+.btn-navy {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.btn-navy:hover {
+  background: var(--navy-deep);
+}
+
 .link-classified {
   color: var(--link);
 }

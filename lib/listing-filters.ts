@@ -5,6 +5,12 @@ import {
   type BoatType,
 } from "@/lib/boats";
 import type { Listing } from "@/lib/db/schema";
+import {
+  listingPriceInTry,
+  parseListingCurrency,
+  type ExchangeRates,
+  type ListingCurrency,
+} from "@/lib/listing-currency";
 
 export type ListingCategoryKey =
   | ""
@@ -98,11 +104,47 @@ export function getPriceRangeBounds(key: PriceRangeKey): { min?: number; max?: n
 export type ListingSortKey = "" | "tarih-yeni" | "tarih-eski" | "fiyat-artan" | "fiyat-azalan";
 
 export const listingSortFilters: { key: ListingSortKey; label: string }[] = [
-  { key: "", label: "Tarihe göre (önce en yeni)" },
-  { key: "tarih-eski", label: "Tarihe göre (önce en eski)" },
-  { key: "fiyat-artan", label: "Fiyata göre (önce en düşük)" },
-  { key: "fiyat-azalan", label: "Fiyata göre (önce en yüksek)" },
+  { key: "", label: "Tarihe göre (Önce en yeni)" },
+  { key: "tarih-eski", label: "Tarihe göre (Önce en eski)" },
+  { key: "fiyat-artan", label: "Fiyata göre (Önce en düşük)" },
+  { key: "fiyat-azalan", label: "Fiyata göre (Önce en yüksek)" },
 ];
+
+export function sortPublicBoats<
+  T extends { price: number; currency?: ListingCurrency; year: number; createdAt?: Date },
+>(boats: T[], sort?: ListingSortKey, rates?: ExchangeRates): T[] {
+  const copy = [...boats];
+  const dateValue = (b: T) => b.createdAt?.getTime() ?? b.year;
+  const tryPrice = (b: T) =>
+    listingPriceInTry(b.price, parseListingCurrency(b.currency), rates);
+
+  switch (sort) {
+    case "tarih-eski":
+      return copy.sort((a, b) => dateValue(a) - dateValue(b));
+    case "fiyat-artan":
+      return copy.sort((a, b) => tryPrice(a) - tryPrice(b));
+    case "fiyat-azalan":
+      return copy.sort((a, b) => tryPrice(b) - tryPrice(a));
+    default:
+      return copy.sort((a, b) => dateValue(b) - dateValue(a));
+  }
+}
+
+export function filterListingsByTryPrice<
+  T extends { price: number; currency?: string | null },
+>(rows: T[], bounds: { min?: number; max?: number }, rates?: ExchangeRates) {
+  if (bounds.min == null && bounds.max == null) return rows;
+  return rows.filter((row) => {
+    const tryPrice = listingPriceInTry(
+      row.price,
+      parseListingCurrency(row.currency),
+      rates,
+    );
+    if (bounds.min != null && tryPrice < bounds.min) return false;
+    if (bounds.max != null && tryPrice > bounds.max) return false;
+    return true;
+  });
+}
 
 export function parseListingSort(key?: string): ListingSortKey {
   const found = listingSortFilters.find((f) => f.key === key);

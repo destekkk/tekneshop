@@ -7,6 +7,15 @@ import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
 import { createListingInquiry, reportListingInquiry } from "@/lib/listing-inquiries-store";
+import {
+  addListingFavorite,
+  addProductFavorite,
+  isListingFavorited,
+  isProductFavorited,
+  removeListingFavorite,
+  removeProductFavorite,
+  removeFavoriteById,
+} from "@/lib/favorites-store";
 import { createOffer, getUserOfferForListing } from "@/lib/offers-store";
 import { getListingBySlug } from "@/lib/listings-store";
 import { logActivity } from "@/lib/admin/activity";
@@ -268,4 +277,83 @@ export async function registerUserAction(
     message: "Kayıt başarılı. Giriş yapabilirsiniz.",
     error: "",
   };
+}
+
+export async function toggleFavoriteAction(opts: {
+  kind: "listing" | "product";
+  slug: string;
+  listingId?: number;
+  productName?: string;
+}) {
+  const session = await getUserSession();
+  const redirectPath =
+    opts.kind === "listing" ? `/tekne/ilan/${opts.slug}` : `/urun/${opts.slug}`;
+
+  if (!session.isLoggedIn || !session.userId) {
+    redirect(`/giris?redirect=${encodeURIComponent(redirectPath)}`);
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, favorited: false, error: "Favoriler için veritabanı gerekli." };
+  }
+
+  if (opts.kind === "listing") {
+    const listing = await getListingBySlug(opts.slug);
+    if (!listing || listing.status !== "approved") {
+      return { ok: false, favorited: false, error: "Bu ilan favorilere eklenemez." };
+    }
+
+    const favorited = await isListingFavorited(session.userId, opts.slug);
+    if (favorited) {
+      await removeListingFavorite(session.userId, opts.slug);
+      revalidatePath("/favorilerim");
+      revalidatePath("/tekne");
+      revalidatePath(`/tekne/ilan/${opts.slug}`);
+      return { ok: true, favorited: false, error: "" };
+    }
+
+    await addListingFavorite(session.userId, { id: listing.id, slug: listing.slug });
+    revalidatePath("/favorilerim");
+    revalidatePath("/tekne");
+    revalidatePath(`/tekne/ilan/${opts.slug}`);
+    return { ok: true, favorited: true, error: "" };
+  }
+
+  const favorited = await isProductFavorited(session.userId, opts.slug);
+  if (favorited) {
+    await removeProductFavorite(session.userId, opts.slug);
+    revalidatePath("/favorilerim");
+    revalidatePath(`/urun/${opts.slug}`);
+    return { ok: true, favorited: false, error: "" };
+  }
+
+  await addProductFavorite(session.userId, opts.slug, opts.productName);
+  revalidatePath("/favorilerim");
+  revalidatePath(`/urun/${opts.slug}`);
+  return { ok: true, favorited: true, error: "" };
+}
+
+export async function removeFavoriteAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const favoriteId = Number(formData.get("favoriteId"));
+
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    redirect("/giris?redirect=/favorilerim");
+  }
+
+  if (!favoriteId) {
+    return { ok: false, message: "", error: "Geçersiz favori." };
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Veritabanı gerekli." };
+  }
+
+  await removeFavoriteById(session.userId, favoriteId);
+  revalidatePath("/favorilerim");
+
+  return { ok: true, message: "Favorilerden kaldırıldı.", error: "" };
 }

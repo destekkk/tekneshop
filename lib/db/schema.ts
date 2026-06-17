@@ -38,6 +38,7 @@ export const listings = pgTable("listings", {
   condition: text("condition"),
   boatType: text("boat_type"),
   price: integer("price").notNull().default(0),
+  currency: text("currency").notNull().default("TRY"),
   year: integer("year"),
   lengthM: text("length_m"),
   location: text("location"),
@@ -237,6 +238,39 @@ export const listingOffers = pgTable("listing_offers", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const userFavorites = pgTable("user_favorites", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  listingId: integer("listing_id"),
+  listingSlug: text("listing_slug"),
+  productSlug: text("product_slug"),
+  productName: text("product_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const listingPriceHistory = pgTable("listing_price_history", {
+  id: serial("id").primaryKey(),
+  listingId: integer("listing_id").notNull(),
+  price: integer("price").notNull(),
+  currency: text("currency").notNull().default("TRY"),
+  recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull().defaultNow(),
+  source: text("source").notNull().default("create"),
+});
+
+export const favoritePriceAlerts = pgTable("favorite_price_alerts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  listingId: integer("listing_id").notNull(),
+  listingTitle: text("listing_title"),
+  listingSlug: text("listing_slug"),
+  oldPrice: integer("old_price").notNull(),
+  newPrice: integer("new_price").notNull(),
+  currency: text("currency").notNull().default("TRY"),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const emailCampaigns = pgTable("email_campaigns", {
   id: serial("id").primaryKey(),
   subject: text("subject").notNull(),
@@ -270,5 +304,8 @@ export type ListingInquiry = typeof listingInquiries.$inferSelect;
 export type NewListingInquiry = typeof listingInquiries.$inferInsert;
 export type ListingOffer = typeof listingOffers.$inferSelect;
 export type NewListingOffer = typeof listingOffers.$inferInsert;
+export type UserFavorite = typeof userFavorites.$inferSelect;
+export type ListingPriceHistory = typeof listingPriceHistory.$inferSelect;
+export type FavoritePriceAlert = typeof favoritePriceAlerts.$inferSelect;
 export type EmailSubscriber = typeof emailSubscribers.$inferSelect;
 export type EmailCampaign = typeof emailCampaigns.$inferSelect;

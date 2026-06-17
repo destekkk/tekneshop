@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import CsyProductCard from "@/components/CsyProductCard";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
@@ -20,7 +21,9 @@ export default function MagazaPage() {
           { label: "Marin Mağaza" },
         ]}
       />
-      <ListingToolbar count={csyProducts.length} title="Tüm ürünler" />
+      <Suspense fallback={<div className="h-12 border-b border-border" />}>
+        <ListingToolbar sortable={false} count={csyProducts.length} title="Tüm ürünler" />
+      </Suspense>
       <div>
         <ListingWithAds
           items={csyProducts}

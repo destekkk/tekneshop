@@ -123,6 +123,44 @@ export async function getListingInquiries() {
   }
 }
 
+export async function getUnreadListingInquiryCountForOwner(ownerEmail: string) {
+  if (!isDbConfigured()) return 0;
+  try {
+    const db = getDb();
+    const email = ownerEmail.trim().toLowerCase();
+    const [row] = await db
+      .select({ c: count() })
+      .from(listingInquiries)
+      .innerJoin(listings, eq(listings.id, listingInquiries.listingId))
+      .where(
+        sql`LOWER(${listings.contactEmail}) = ${email} AND ${listingInquiries.read} = false`,
+      );
+    return row.c;
+  } catch {
+    return 0;
+  }
+}
+
+export async function markListingInquiriesReadForOwner(ownerEmail: string) {
+  if (!isDbConfigured()) return;
+  try {
+    const db = getDb();
+    const email = ownerEmail.trim().toLowerCase();
+    const unread = await db
+      .select({ id: listingInquiries.id })
+      .from(listingInquiries)
+      .innerJoin(listings, eq(listings.id, listingInquiries.listingId))
+      .where(
+        sql`LOWER(${listings.contactEmail}) = ${email} AND ${listingInquiries.read} = false`,
+      );
+    for (const row of unread) {
+      await markListingInquiryRead(row.id);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export async function getUnreadListingInquiryCount() {
   if (!isDbConfigured()) return 0;
   try {

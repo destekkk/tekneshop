@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { fieldValue, preserveFormKey } from "@/lib/form-preserve";
+import { usePreserveFormAction } from "@/lib/use-preserve-form-action";
 import { submitOfferAction } from "@/lib/user-actions";
 import { formatPrice } from "@/lib/boats";
 import type { ListingOffer } from "@/lib/db/schema";
@@ -30,11 +31,12 @@ export default function OfferForm({
   user: { id: number; name: string; email: string } | null;
   existingOffer: ListingOffer | null;
 }) {
-  const [state, action, pending] = useActionState(submitOfferAction, initial);
+  const { state, action, pending, values } = usePreserveFormAction(submitOfferAction, initial);
+  const formKey = preserveFormKey(state, values);
 
   if (!user) {
     return (
-      <div className="rounded-lg border border-border bg-[#fafafa] p-4">
+      <div className="w-full max-w-lg rounded-lg border border-border bg-[#fafafa] p-4">
         <p className="text-[13px] font-semibold text-navy">Teklif ver</p>
         <p className="mt-1 text-[13px] text-muted">
           Bu ilana teklif vermek için giriş yapmanız gerekir.
@@ -51,7 +53,7 @@ export default function OfferForm({
 
   if (existingOffer && existingOffer.status !== "rejected") {
     return (
-      <div className="rounded-lg border border-navy/20 bg-[#f0f9f8] p-4">
+      <div className="w-full max-w-lg rounded-lg border border-navy/20 bg-[#f0f9f8] p-4">
         <p className="text-[13px] font-semibold text-navy">Teklifiniz</p>
         <p className="mt-2 text-[18px] font-bold text-navy">{formatPrice(existingOffer.amount)}</p>
         {existingOffer.message ? (
@@ -68,7 +70,7 @@ export default function OfferForm({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-4">
+    <div className="w-full max-w-lg rounded-lg border border-border bg-white p-4">
       <p className="text-[13px] font-semibold text-navy">Teklif ver</p>
       <p className="mt-1 text-[12px] text-muted">
         {listingTitle}
@@ -84,7 +86,7 @@ export default function OfferForm({
         <p className="mt-3 rounded bg-rose-50 px-3 py-2 text-[13px] text-rose-800">{state.error}</p>
       ) : null}
 
-      <form action={action} className="mt-4 space-y-3">
+      <form key={formKey} action={action} className="mt-4 space-y-3">
         <input type="hidden" name="listingId" value={listingId} />
         <input type="hidden" name="listingSlug" value={listingSlug} />
 
@@ -96,6 +98,7 @@ export default function OfferForm({
             inputMode="numeric"
             required
             placeholder="Örn. 2500000"
+            defaultValue={fieldValue(values, "amount")}
             className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -106,6 +109,7 @@ export default function OfferForm({
             name="message"
             rows={3}
             placeholder="Ödeme koşulu, teslim süresi vb."
+            defaultValue={fieldValue(values, "message")}
             className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
           />
         </div>

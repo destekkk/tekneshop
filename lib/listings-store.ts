@@ -1,5 +1,12 @@
-import { and, asc, count, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
 import type { ListingSortKey } from "@/lib/listing-filters";
+import { filterListingsByTryPrice } from "@/lib/listing-filters";
+import {
+  listingPriceInTry,
+  parseListingCurrency,
+  type ListingCurrency,
+} from "@/lib/listing-currency";
+import { getTcmbRates } from "@/lib/tcmb-rates";
 import {
   demoListingNumber,
   isValidListingNumber,
@@ -14,6 +21,10 @@ import {
 } from "@/lib/boats";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { listings, type Listing, type NewListing } from "@/lib/db/schema";
+import {
+  notifyFavoritePriceChange,
+  recordListingPrice,
+} from "@/lib/price-history-store";
 
 export type ListingStatus = "pending" | "approved" | "rejected" | "archived";
 
@@ -30,11 +41,13 @@ function dbToBoat(row: Listing): BoatListing {
     condition: (row.condition as BoatCondition) || "ikinci-el",
     boatType: (row.boatType as BoatType) || "motoryat",
     price: row.price,
+    currency: (row.currency as ListingCurrency) || "TRY",
     year: row.year ?? new Date().getFullYear(),
     lengthM: row.lengthM ? parseFloat(row.lengthM) : 0,
     location: row.location ?? "",
     engine: row.engine ?? undefined,
     badge: row.badge ?? undefined,
+    createdAt: row.createdAt,
   };
 }
 
@@ -59,6 +72,17 @@ export async function getListingBySlug(slug: string) {
   try {
     const db = getDb();
     const [row] = await db.select().from(listings).where(eq(listings.slug, slug)).limit(1);
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getListingById(id: number) {
+  if (!isDbConfigured()) return null;
+  try {
+    const db = getDb();
+    const [row] = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
     return row || null;
   } catch {
     return null;
@@ -98,18 +122,22 @@ export async function filterApprovedBoats(opts: {
   });
 }
 
-function sortAdminListings<T extends { price: number; createdAt: Date }>(
+function sortAdminListings<T extends { price: number; currency?: string | null; createdAt: Date }>(
   rows: T[],
   sort?: ListingSortKey,
+  rates?: { USD: number; EUR: number },
 ): T[] {
   const copy = [...rows];
+  const tryPrice = (row: T) =>
+    listingPriceInTry(row.price, parseListingCurrency(row.currency), rates);
+
   switch (sort) {
     case "tarih-eski":
       return copy.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     case "fiyat-artan":
-      return copy.sort((a, b) => a.price - b.price);
+      return copy.sort((a, b) => tryPrice(a) - tryPrice(b));
     case "fiyat-azalan":
-      return copy.sort((a, b) => b.price - a.price);
+      return copy.sort((a, b) => tryPrice(b) - tryPrice(a));
     default:
       return copy.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
@@ -125,6 +153,11 @@ export async function getAdminListings(opts?: {
   priceMax?: number;
   sort?: ListingSortKey;
 }) {
+  const rates = await getTcmbRates();
+  const priceBounds = { min: opts?.priceMin, max: opts?.priceMax };
+  const priceSort =
+    opts?.sort === "fiyat-artan" || opts?.sort === "fiyat-azalan" ? opts.sort : undefined;
+
   if (!isDbConfigured()) {
     let demo = boatListings.map((b, i) => ({
       id: i + 1,
@@ -137,6 +170,7 @@ export async function getAdminListings(opts?: {
       condition: b.condition,
       boatType: b.boatType,
       price: b.price,
+      currency: "TRY",
       year: b.year,
       lengthM: String(b.lengthM),
       location: b.location,
@@ -175,9 +209,8 @@ export async function getAdminListings(opts?: {
         );
       });
     }
-    if (opts?.priceMin != null) demo = demo.filter((r) => r.price >= opts.priceMin!);
-    if (opts?.priceMax != null) demo = demo.filter((r) => r.price <= opts.priceMax!);
-    return sortAdminListings(demo, opts?.sort);
+    demo = filterListingsByTryPrice(demo, priceBounds, rates);
+    return sortAdminListings(demo, opts?.sort, rates);
   }
   try {
     const db = getDb();
@@ -202,23 +235,21 @@ export async function getAdminListings(opts?: {
         filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
       }
     }
-    if (opts?.priceMin != null) filters.push(gte(listings.price, opts.priceMin));
-    if (opts?.priceMax != null) filters.push(lte(listings.price, opts.priceMax));
 
-    const order =
-      opts?.sort === "tarih-eski"
+    const order = priceSort
+      ? desc(listings.createdAt)
+      : opts?.sort === "tarih-eski"
         ? asc(listings.createdAt)
-        : opts?.sort === "fiyat-artan"
-          ? asc(listings.price)
-          : opts?.sort === "fiyat-azalan"
-            ? desc(listings.price)
-            : desc(listings.createdAt);
+        : desc(listings.createdAt);
 
-    return await db
+    let rows = await db
       .select()
       .from(listings)
       .where(filters.length ? and(...filters) : undefined)
       .orderBy(order);
+
+    rows = filterListingsByTryPrice(rows, priceBounds, rates);
+    return sortAdminListings(rows, opts?.sort, rates);
   } catch {
     return [];
   }
@@ -330,6 +361,9 @@ export async function createListing(data: NewListing) {
     .insert(listings)
     .values({ ...data, listingNumber })
     .returning();
+  if (row) {
+    await recordListingPrice(row.id, row.price, row.currency || "TRY", "create");
+  }
   return row;
 }
 
@@ -374,6 +408,51 @@ export async function updateListingAdminNotes(id: number, notes: string) {
     .set({ adminNotes: notes, updatedAt: new Date() })
     .where(eq(listings.id, id))
     .returning();
+  return row;
+}
+
+export type ListingUpdateData = {
+  title?: string;
+  description?: string | null;
+  condition?: string | null;
+  boatType?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  price?: number;
+  currency?: string;
+  year?: number | null;
+  lengthM?: string | null;
+  location?: string | null;
+  engine?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  showContactPhone?: boolean;
+  image?: string;
+  images?: string[];
+};
+
+export async function updateListing(id: number, data: ListingUpdateData) {
+  const db = getDb();
+  const existing = await getListingById(id);
+  const [row] = await db
+    .update(listings)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(listings.id, id))
+    .returning();
+
+  if (row && existing && data.price !== undefined && data.price !== existing.price) {
+    await recordListingPrice(row.id, row.price, row.currency || "TRY", "admin_edit");
+    await notifyFavoritePriceChange({
+      listingId: row.id,
+      listingTitle: row.title,
+      listingSlug: row.slug,
+      oldPrice: existing.price,
+      newPrice: row.price,
+      currency: row.currency || "TRY",
+    });
+  }
+
   return row;
 }
 

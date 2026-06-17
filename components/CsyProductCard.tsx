@@ -1,8 +1,19 @@
+import FavoriteButton from "@/components/FavoriteButton";
 import ListingRow from "@/components/ListingRow";
 import type { CsyProduct } from "@/lib/csy-products";
 import { formatPrice } from "@/lib/csy-products";
 
-export default function CsyProductCard({ product }: { product: CsyProduct }) {
+type Props = {
+  product: CsyProduct;
+  isFavorited?: boolean;
+  showFavorite?: boolean;
+};
+
+export default function CsyProductCard({
+  product,
+  isFavorited = false,
+  showFavorite = false,
+}: Props) {
   const badges = [
     product.brand,
     ...(product.discount ? [product.discount] : []),
@@ -18,6 +29,17 @@ export default function CsyProductCard({ product }: { product: CsyProduct }) {
       details={product.description}
       price={formatPrice(product.price)}
       badges={badges}
+      favoriteSlot={
+        showFavorite ? (
+          <FavoriteButton
+            kind="product"
+            slug={product.slug}
+            productName={product.name}
+            initialFavorited={isFavorited}
+            compact
+          />
+        ) : undefined
+      }
     />
   );
 }

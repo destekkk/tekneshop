@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
+import FavoriteButton from "@/components/FavoriteButton";
 import ListingImageGallery from "@/components/ListingImageGallery";
 import ListingContact from "@/components/ListingContact";
 import OfferForm from "@/components/OfferForm";
@@ -15,8 +16,11 @@ import {
   boatListings,
 } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
+import { parseListingCurrency } from "@/lib/listing-currency";
 import { getUserOfferForListing } from "@/lib/offers-store";
 import { getBoatBySlug, getListingBySlug } from "@/lib/listings-store";
+import { isDbConfigured } from "@/lib/db";
+import { isListingFavorited } from "@/lib/favorites-store";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -48,6 +52,10 @@ export default async function BoatDetailPage({ params }: Props) {
     : boatTypeLabel(boat.boatType);
   const existingOffer =
     user && listing ? await getUserOfferForListing(user.id, listing.id) : null;
+  const isFavorited =
+    user && listing && isDbConfigured()
+      ? await isListingFavorited(user.id, slug)
+      : false;
   const galleryImages = listing
     ? [listing.image, ...(listing.images ?? [])].filter(
         (src): src is string => Boolean(src) && src.length > 0,
@@ -74,7 +82,17 @@ export default async function BoatDetailPage({ params }: Props) {
             </p>
           ) : null}
           <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
-          <p className="mt-3 text-[22px] font-bold text-navy">{formatPrice(boat.price)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            <p className="text-[22px] font-bold text-navy">
+              {formatPrice(
+                boat.price,
+                parseListingCurrency(listing?.currency ?? boat.currency),
+              )}
+            </p>
+            {listing && isDbConfigured() ? (
+              <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+            ) : null}
+          </div>
           <table className="mt-6 w-full max-w-md border-collapse text-[13px]">
             <tbody>
               {boat.listingNumber ? (
@@ -123,7 +141,7 @@ export default async function BoatDetailPage({ params }: Props) {
               )}
             </tbody>
           </table>
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 flex w-full max-w-lg flex-col items-start gap-4">
             {listing && listing.status === "approved" ? (
               <>
                 <ListingContact

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { fieldValue, preserveFormKey } from "@/lib/form-preserve";
+import { usePreserveFormAction } from "@/lib/use-preserve-form-action";
 import { loginUserAction } from "@/lib/user-actions";
 
 const initial = { ok: false, message: "", error: "" };
@@ -13,10 +14,12 @@ export default function LoginForm({
   embedded?: boolean;
   redirectTo?: string;
 }) {
-  const [state, action, pending] = useActionState(loginUserAction, initial);
+  const { state, action, pending, values } = usePreserveFormAction(loginUserAction, initial);
+  const formKey = preserveFormKey(state, values);
 
   return (
     <form
+      key={formKey}
       action={action}
       className={`space-y-4 p-6 ${embedded ? "" : "rounded-xl border border-border bg-card"}`}
     >
@@ -34,6 +37,7 @@ export default function LoginForm({
           required
           autoComplete="username"
           placeholder="ornek@email.com"
+          defaultValue={fieldValue(values, "email")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -44,6 +48,7 @@ export default function LoginForm({
           type="password"
           required
           autoComplete="current-password"
+          defaultValue={fieldValue(values, "password")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>

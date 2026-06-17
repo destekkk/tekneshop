@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import {
   approveListingAction,
@@ -20,6 +21,12 @@ export default function ListingActions({ id, status, isFeatured }: Props) {
 
   return (
     <div className="flex flex-wrap gap-1.5">
+      <Link
+        href={`/admin/ilanlar/${id}`}
+        className="rounded border border-navy/20 bg-navy/5 px-2.5 py-1 text-[11px] font-semibold text-navy hover:bg-navy/10"
+      >
+        İncele
+      </Link>
       {status === "pending" ? (
         <>
           <button

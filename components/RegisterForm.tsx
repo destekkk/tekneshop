@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { fieldValue, isFieldChecked, preserveFormKey } from "@/lib/form-preserve";
+import { usePreserveFormAction } from "@/lib/use-preserve-form-action";
 import { registerUserAction } from "@/lib/user-actions";
 
 const initial = { ok: false, message: "", error: "" };
 
 export default function RegisterForm({ embedded = false }: { embedded?: boolean }) {
-  const [state, action, pending] = useActionState(registerUserAction, initial);
+  const { state, action, pending, values } = usePreserveFormAction(registerUserAction, initial);
+  const formKey = preserveFormKey(state, values);
 
   return (
-    <form action={action} className={`space-y-4 p-6 ${embedded ? "" : "rounded-xl border border-border bg-card"}`}>
+    <form
+      key={formKey}
+      action={action}
+      className={`space-y-4 p-6 ${embedded ? "" : "rounded-xl border border-border bg-card"}`}
+    >
       {state.message ? (
         <p className="rounded bg-emerald-50 px-3 py-2 text-[13px] text-emerald-800">{state.message}</p>
       ) : null}
@@ -24,6 +30,7 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           name="name"
           required
           autoComplete="name"
+          defaultValue={fieldValue(values, "name")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -38,6 +45,7 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           pattern="\d{11}"
           placeholder="11 haneli TC kimlik numarası"
           autoComplete="off"
+          defaultValue={fieldValue(values, "tcNo")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm tracking-wider"
         />
         <p className="mt-1 text-[11px] text-muted">Sadece rakam, 11 hane.</p>
@@ -50,6 +58,7 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           type="email"
           required
           autoComplete="email"
+          defaultValue={fieldValue(values, "email")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -62,6 +71,7 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           inputMode="tel"
           placeholder="05xx xxx xx xx"
           autoComplete="tel"
+          defaultValue={fieldValue(values, "phone")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -74,6 +84,7 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           required
           minLength={6}
           autoComplete="new-password"
+          defaultValue={fieldValue(values, "password")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
@@ -86,12 +97,18 @@ export default function RegisterForm({ embedded = false }: { embedded?: boolean 
           required
           minLength={6}
           autoComplete="new-password"
+          defaultValue={fieldValue(values, "passwordConfirm")}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
 
       <label className="flex items-start gap-2 text-[12px] text-muted">
-        <input name="emailConsent" type="checkbox" className="mt-0.5" />
+        <input
+          name="emailConsent"
+          type="checkbox"
+          defaultChecked={isFieldChecked(values, "emailConsent")}
+          className="mt-0.5"
+        />
         Kampanya ve duyuru e-postaları almak istiyorum (isteğe bağlı)
       </label>
 

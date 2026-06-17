@@ -1,3 +1,6 @@
+import type { ListingCurrency } from "@/lib/listing-currency";
+import { formatListingPrice } from "@/lib/listing-currency";
+
 export type BoatCondition = "sifir" | "ikinci-el" | "kiralik";
 
 export type BoatType =
@@ -16,11 +19,13 @@ export type BoatListing = {
   condition: BoatCondition;
   boatType: BoatType;
   price: number;
+  currency?: ListingCurrency;
   year: number;
   lengthM: number;
   location: string;
   engine?: string;
   badge?: string;
+  createdAt?: Date;
 };
 
 /** Yerel tekne fotoğrafları: public/boats/{slug}.jpg */
@@ -151,9 +156,11 @@ export const boatListings: BoatListing[] = [
   },
 ];
 
-export function formatPrice(tl?: number | null) {
-  const n = Number(tl ?? 0);
-  return `${n.toLocaleString("tr-TR")} ₺`;
+export function formatPrice(
+  amount?: number | null,
+  currency: ListingCurrency = "TRY",
+) {
+  return formatListingPrice(amount, currency);
 }
 
 export function getBoat(slug: string) {

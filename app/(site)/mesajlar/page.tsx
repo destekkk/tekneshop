@@ -3,13 +3,17 @@ import ListingPageHeader from "@/components/ListingPageHeader";
 import SellerInquiriesManager from "@/components/SellerInquiriesManager";
 import { requireUser } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
-import { getListingInquiriesForOwner } from "@/lib/listing-inquiries-store";
+import { getListingInquiriesForOwner, markListingInquiriesReadForOwner } from "@/lib/listing-inquiries-store";
 
 export const metadata = { title: "İlan Mesajlarım | TekneShop" };
 
 export default async function MesajlarPage() {
   const user = await requireUser("/mesajlar");
   const inquiries = isDbConfigured() ? await getListingInquiriesForOwner(user.email) : [];
+
+  if (isDbConfigured()) {
+    await markListingInquiriesReadForOwner(user.email);
+  }
 
   return (
     <>

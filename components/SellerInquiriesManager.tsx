@@ -77,9 +77,6 @@ export default function SellerInquiriesManager({
         <p className="mt-2 text-[12px] text-muted">
           Telefonu gizlediğiniz ilanlara gelen mesajlar burada görünür.
         </p>
-        <Link href="/ilan-ver" className="mt-4 inline-block text-[13px] text-navy hover:underline">
-          İlan ver →
-        </Link>
       </div>
     );
   }

@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import CsyProductCard from "@/components/CsyProductCard";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
 import ListingWithAds from "@/components/ListingWithAds";
+import { getCurrentUser } from "@/lib/auth/user-session";
 import type { CsyMainCategory } from "@/lib/csy-categories";
 import { csySubHref } from "@/lib/csy-categories";
 import type { CsyProduct } from "@/lib/csy-products";
+import { isDbConfigured } from "@/lib/db";
+import { getUserFavoriteKeys } from "@/lib/favorites-store";
 
 type Props = {
   main: CsyMainCategory;
@@ -14,8 +18,12 @@ type Props = {
   crumbs: { label: string; href?: string }[];
 };
 
-export default function MagazaListing({ main, sub, products, crumbs }: Props) {
+export default async function MagazaListing({ main, sub, products, crumbs }: Props) {
   const title = sub ? sub.label : main.label;
+  const user = await getCurrentUser();
+  const favKeys =
+    user && isDbConfigured() ? await getUserFavoriteKeys(user.id) : null;
+  const showFavorite = isDbConfigured();
 
   return (
     <>
@@ -33,13 +41,21 @@ export default function MagazaListing({ main, sub, products, crumbs }: Props) {
           ))}
         </div>
       )}
-      <ListingToolbar count={products.length} title={title} />
+      <Suspense fallback={<div className="h-12 border-b border-border" />}>
+        <ListingToolbar sortable={false} count={products.length} title={title} />
+      </Suspense>
       <div>
         {products.length > 0 ? (
           <ListingWithAds
             items={products}
             getKey={(p) => p.slug}
-            renderItem={(p) => <CsyProductCard product={p} />}
+            renderItem={(p) => (
+              <CsyProductCard
+                product={p}
+                showFavorite={showFavorite}
+                isFavorited={favKeys?.productSlugs.has(p.slug) ?? false}
+              />
+            )}
           />
         ) : (
           <p className="px-4 py-12 text-center text-[13px] text-muted">

@@ -5,6 +5,7 @@ import { activityLogs } from "@/lib/db/schema";
 export const actionLabels: Record<string, string> = {
   approve: "İlan onaylandı",
   reject: "İlan reddedildi",
+  update_listing: "İlan düzenlendi",
   delete: "İlan silindi",
   archive: "İlan arşivlendi",
   feature: "Vitrine alındı",

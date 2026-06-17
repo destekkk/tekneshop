@@ -34,7 +34,7 @@ export default function Header() {
           />
           <button
             type="submit"
-            className="btn-cta shrink-0 px-10 text-[15px] font-bold"
+            className="btn-navy shrink-0 px-10 text-[15px] font-bold"
             style={{ minWidth: "6.5rem" }}
           >
             Ara
