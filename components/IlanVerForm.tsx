@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import ListingImageUpload from "@/components/ListingImageUpload";
 import BoatListingFields from "@/components/BoatListingFields";
 import { submitListingFormAction } from "@/lib/admin/actions";
@@ -13,9 +13,18 @@ export default function IlanVerForm({
   user: { name: string; email: string; phone?: string | null };
 }) {
   const [state, action, pending] = useActionState(submitListingFormAction, initial);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  function handleSubmit(formData: FormData) {
+    formData.delete("images");
+    for (const file of imageFiles) {
+      formData.append("images", file);
+    }
+    action(formData);
+  }
 
   return (
-    <form action={action} className="space-y-4 rounded-xl border border-border bg-card p-6">
+    <form action={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-6">
       {state.message ? (
         <p className="rounded bg-emerald-50 px-3 py-2 text-[13px] text-emerald-800">{state.message}</p>
       ) : null}
@@ -65,7 +74,7 @@ export default function IlanVerForm({
         <label className="text-sm font-medium">Motor</label>
         <input name="engine" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
       </div>
-      <ListingImageUpload />
+      <ListingImageUpload onFilesChange={setImageFiles} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium">Ad Soyad</label>

@@ -52,7 +52,7 @@ export async function uploadListingImages(files: File[], slug: string): Promise<
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const ext = extForType(file.type);
-    const filename = `${slug}-${index + 1}-${Date.now()}.${ext}`;
+    const filename = `${slug}-${index + 1}-${Date.now()}-${index}.${ext}`;
 
     if (useBlob) {
       const blob = await put(`listings/${filename}`, buffer, {

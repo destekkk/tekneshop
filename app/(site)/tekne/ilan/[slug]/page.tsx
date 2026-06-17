@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
-import ListingThumbnail from "@/components/ListingThumbnail";
+import ListingImageGallery from "@/components/ListingImageGallery";
 import ListingContact from "@/components/ListingContact";
 import OfferForm from "@/components/OfferForm";
 import WhatsAppLink from "@/components/WhatsAppLink";
@@ -48,6 +48,11 @@ export default async function BoatDetailPage({ params }: Props) {
     : boatTypeLabel(boat.boatType);
   const existingOffer =
     user && listing ? await getUserOfferForListing(user.id, listing.id) : null;
+  const galleryImages = listing
+    ? [listing.image, ...(listing.images ?? [])].filter(
+        (src): src is string => Boolean(src) && src.length > 0,
+      )
+    : [boat.image];
 
   return (
     <div>
@@ -60,7 +65,7 @@ export default async function BoatDetailPage({ params }: Props) {
       />
       <div className="flex flex-col gap-6 p-4 lg:flex-row lg:p-6">
         <div className="max-w-lg lg:w-2/5">
-          <ListingThumbnail src={boat.image} alt={boat.title} size="detail" />
+          <ListingImageGallery images={galleryImages} alt={boat.title} />
         </div>
         <div className="flex-1">
           {boat.listingNumber ? (

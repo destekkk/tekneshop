@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function ListingImageUpload() {
+type Props = {
+  onFilesChange?: (files: File[]) => void;
+};
+
+export default function ListingImageUpload({ onFilesChange }: Props) {
+  const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ url: string; name: string }[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onFilesChange?.(files);
+  }, [files, onFilesChange]);
 
   useEffect(() => {
     return () => {
@@ -11,10 +21,24 @@ export default function ListingImageUpload() {
     };
   }, [previews]);
 
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function syncPreviews(nextFiles: File[]) {
     for (const p of previews) URL.revokeObjectURL(p.url);
-    const files = Array.from(e.target.files || []).slice(0, 8);
-    setPreviews(files.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+    setPreviews(nextFiles.map((f) => ({ url: URL.createObjectURL(f), name: f.name })));
+  }
+
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(e.target.files || []);
+    if (picked.length === 0) return;
+    const next = [...files, ...picked].slice(0, 8);
+    setFiles(next);
+    syncPreviews(next);
+    e.target.value = "";
+  }
+
+  function removeAt(index: number) {
+    const next = files.filter((_, i) => i !== index);
+    setFiles(next);
+    syncPreviews(next);
   }
 
   return (
@@ -25,18 +49,27 @@ export default function ListingImageUpload() {
           En fazla 8 fotoğraf (JPG, PNG, WebP · max 5 MB). İlk fotoğraf kapak görseli olur.
         </p>
         <input
+          ref={inputRef}
           type="file"
-          name="images"
           accept="image/jpeg,image/png,image/webp"
           multiple
-          onChange={onChange}
+          onChange={onPick}
           className="mt-2 block w-full text-[13px] file:mr-3 file:rounded file:border-0 file:bg-navy file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-white hover:file:bg-navy-deep"
         />
+        {files.length > 0 && files.length < 8 ? (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="mt-2 text-[12px] font-medium text-navy hover:underline"
+          >
+            + Başka fotoğraf ekle ({files.length}/8)
+          </button>
+        ) : null}
       </div>
       {previews.length > 0 ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {previews.map((p, i) => (
-            <div key={p.url} className="relative aspect-[4/3] overflow-hidden rounded border border-border bg-white">
+            <div key={`${p.name}-${i}`} className="relative aspect-[4/3] overflow-hidden rounded border border-border bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
               {i === 0 ? (
@@ -44,6 +77,14 @@ export default function ListingImageUpload() {
                   Kapak
                 </span>
               ) : null}
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-black/80"
+                aria-label="Fotoğrafı kaldır"
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
