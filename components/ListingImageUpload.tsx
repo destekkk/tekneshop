@@ -67,21 +67,25 @@ export default function ListingImageUpload({ onFilesChange }: Props) {
         ) : null}
       </div>
       {previews.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {previews.map((p, i) => (
-            <div key={`${p.name}-${i}`} className="relative aspect-[4/3] overflow-hidden rounded border border-border bg-white">
+            <div
+              key={`${p.name}-${i}`}
+              className="group relative aspect-[4/3] overflow-hidden rounded border border-border bg-white"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
               {i === 0 ? (
-                <span className="absolute left-1 top-1 rounded bg-navy px-1.5 py-0.5 text-[10px] font-bold text-white">
+                <span className="absolute left-1.5 top-1.5 z-10 rounded bg-navy px-1.5 py-0.5 text-[10px] font-bold text-white">
                   Kapak
                 </span>
               ) : null}
               <button
                 type="button"
                 onClick={() => removeAt(i)}
-                className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-black/80"
+                title="Fotoğrafı kaldır"
                 aria-label="Fotoğrafı kaldır"
+                className="absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-[16px] font-bold leading-none text-white shadow-md transition hover:bg-rose-700"
               >
                 ×
               </button>
