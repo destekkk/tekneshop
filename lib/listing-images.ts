@@ -6,6 +6,14 @@ const MAX_FILES = 8;
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/jpg"]);
 
+function isServerlessEnv() {
+  return (
+    process.env.VERCEL === "1" ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    Boolean(process.env.VERCEL_ENV)
+  );
+}
+
 function extForType(type: string) {
   if (type === "image/png") return "png";
   if (type === "image/webp") return "webp";
@@ -23,8 +31,16 @@ export function collectListingImageFiles(formData: FormData): File[] {
 }
 
 export async function uploadListingImages(files: File[], slug: string): Promise<string[]> {
-  const urls: string[] = [];
+  if (files.length === 0) return [];
+
   const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  if (!useBlob && isServerlessEnv()) {
+    throw new Error(
+      "Fotoğraf yükleme canlıda henüz yapılandırılmadı. İlanı fotoğrafsız gönderebilir veya yönetici Vercel Blob ayarını tamamlayana kadar bekleyebilirsiniz.",
+    );
+  }
+
+  const urls: string[] = [];
 
   for (const [index, file] of files.entries()) {
     if (!ALLOWED_TYPES.has(file.type)) {
