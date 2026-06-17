@@ -24,32 +24,30 @@ export default function TekneCategoryLinks({ activeHref, compact = false }: Prop
   const chipActive = "border-navy bg-[#e8f6f5] font-semibold text-navy";
 
   return (
-    <div className={compact ? "space-y-1.5" : "space-y-2"}>
-      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5">
-        {conditionLinks.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`${chip} ${activeHref === item.href ? chipActive : ""}`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {typeLinks.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`${chip} ${activeHref === item.href ? chipActive : ""}`}
-          >
-            {item.label}
-          </Link>
-        ))}
-        <Link href="/tekne" className={`${chip} text-muted hover:text-foreground`}>
-          Tümü
+    <div
+      className={`flex flex-nowrap items-center gap-1.5 overflow-x-auto ${compact ? "pb-0" : "pb-0.5"}`}
+    >
+      {conditionLinks.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`${chip} ${activeHref === item.href ? chipActive : ""}`}
+        >
+          {item.label}
         </Link>
-      </div>
+      ))}
+      {typeLinks.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`${chip} ${activeHref === item.href ? chipActive : ""}`}
+        >
+          {item.label}
+        </Link>
+      ))}
+      <Link href="/tekne" className={`${chip} text-muted hover:text-foreground`}>
+        Tümü
+      </Link>
     </div>
   );
 }
