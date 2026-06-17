@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import SellerInquiriesManager from "@/components/SellerInquiriesManager";
 import { requireUser } from "@/lib/auth/user-session";
@@ -13,6 +14,7 @@ export default async function MesajlarPage() {
 
   if (isDbConfigured()) {
     await markListingInquiriesReadForOwner(user.email);
+    revalidatePath("/", "layout");
   }
 
   return (

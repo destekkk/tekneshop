@@ -171,6 +171,8 @@ export async function submitListingInquiryAction(
 
   revalidatePath(`/tekne/ilan/${listingSlug}`);
   revalidatePath("/admin/mesajlar");
+  revalidatePath("/mesajlar");
+  revalidatePath("/", "layout");
 
   return {
     ok: true,
@@ -213,6 +215,7 @@ export async function reportListingInquiryAction(
 
   revalidatePath("/mesajlar");
   revalidatePath("/admin/mesajlar");
+  revalidatePath("/", "layout");
 
   return {
     ok: true,

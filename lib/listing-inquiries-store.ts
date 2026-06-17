@@ -141,6 +141,22 @@ export async function getUnreadListingInquiryCountForOwner(ownerEmail: string) {
   }
 }
 
+export async function getListingInquiryCountForOwner(ownerEmail: string) {
+  if (!isDbConfigured()) return 0;
+  try {
+    const db = getDb();
+    const email = ownerEmail.trim().toLowerCase();
+    const [row] = await db
+      .select({ c: count() })
+      .from(listingInquiries)
+      .innerJoin(listings, eq(listings.id, listingInquiries.listingId))
+      .where(sql`LOWER(${listings.contactEmail}) = ${email}`);
+    return row.c;
+  } catch {
+    return 0;
+  }
+}
+
 export async function markListingInquiriesReadForOwner(ownerEmail: string) {
   if (!isDbConfigured()) return;
   try {

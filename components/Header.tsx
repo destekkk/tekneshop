@@ -24,7 +24,7 @@ export default function Header() {
         <form
           action="/magaza"
           method="get"
-          className="flex h-12 min-w-0 flex-1 items-stretch lg:max-w-[62%]"
+          className="flex h-12 min-w-0 flex-1 items-stretch lg:flex-none lg:max-w-[31%] lg:w-[31%]"
         >
           <input
             type="search"

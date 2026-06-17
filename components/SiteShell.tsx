@@ -1,5 +1,6 @@
 import CategorySidebar from "@/components/CategorySidebar";
 import SiteAnnouncement from "@/components/SiteAnnouncement";
+import SiteTitleBar from "@/components/SiteTitleBar";
 import TopAdBanner from "@/components/TopAdBanner";
 import { getSiteConfig } from "@/lib/admin/settings";
 import { getActiveTopAd } from "@/lib/ads-store";
@@ -25,6 +26,7 @@ export default async function SiteShell({ children }: { children: React.ReactNod
             subtitle={topAd.subtitle}
           />
         ) : null}
+        <SiteTitleBar />
         {children}
       </div>
     </div>

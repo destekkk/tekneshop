@@ -11,13 +11,6 @@ export default async function HomePage() {
 
   return (
     <main>
-      <div className="border-b border-border bg-[#fafafa] px-4 py-3">
-        <h1 className="text-[15px] font-bold text-foreground">Vitrin — Tekne & Deniz İlanları</h1>
-        <p className="mt-1 text-[12px] text-muted">
-          Tüm kategoriler solda listelenir; istediğiniz alt kategoriye tıklayın.
-        </p>
-      </div>
-
       <section className="border-b border-border px-4 py-3">
         <h2 className="mb-2 text-[12px] font-bold text-navy">Tekne İlanları</h2>
         <TekneCategoryLinks />
