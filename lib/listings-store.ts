@@ -1,4 +1,5 @@
-import { and, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, lte, or } from "drizzle-orm";
+import type { ListingSortKey } from "@/lib/listing-filters";
 import {
   demoListingNumber,
   isValidListingNumber,
@@ -97,12 +98,32 @@ export async function filterApprovedBoats(opts: {
   });
 }
 
+function sortAdminListings<T extends { price: number; createdAt: Date }>(
+  rows: T[],
+  sort?: ListingSortKey,
+): T[] {
+  const copy = [...rows];
+  switch (sort) {
+    case "tarih-eski":
+      return copy.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    case "fiyat-artan":
+      return copy.sort((a, b) => a.price - b.price);
+    case "fiyat-azalan":
+      return copy.sort((a, b) => b.price - a.price);
+    default:
+      return copy.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+}
+
 export async function getAdminListings(opts?: {
   status?: ListingStatus;
   search?: string;
   boatType?: string;
   condition?: string;
   type?: "boat" | "product" | "service";
+  priceMin?: number;
+  priceMax?: number;
+  sort?: ListingSortKey;
 }) {
   if (!isDbConfigured()) {
     let demo = boatListings.map((b, i) => ({
@@ -154,7 +175,9 @@ export async function getAdminListings(opts?: {
         );
       });
     }
-    return demo;
+    if (opts?.priceMin != null) demo = demo.filter((r) => r.price >= opts.priceMin!);
+    if (opts?.priceMax != null) demo = demo.filter((r) => r.price <= opts.priceMax!);
+    return sortAdminListings(demo, opts?.sort);
   }
   try {
     const db = getDb();
@@ -179,11 +202,23 @@ export async function getAdminListings(opts?: {
         filters.push(or(ilike(listings.title, q), ilike(listings.location, q), ilike(listings.slug, q))!);
       }
     }
+    if (opts?.priceMin != null) filters.push(gte(listings.price, opts.priceMin));
+    if (opts?.priceMax != null) filters.push(lte(listings.price, opts.priceMax));
+
+    const order =
+      opts?.sort === "tarih-eski"
+        ? asc(listings.createdAt)
+        : opts?.sort === "fiyat-artan"
+          ? asc(listings.price)
+          : opts?.sort === "fiyat-azalan"
+            ? desc(listings.price)
+            : desc(listings.createdAt);
+
     return await db
       .select()
       .from(listings)
       .where(filters.length ? and(...filters) : undefined)
-      .orderBy(desc(listings.createdAt));
+      .orderBy(order);
   } catch {
     return [];
   }

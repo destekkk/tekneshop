@@ -422,7 +422,7 @@ export async function submitPublicListingAction(formData: FormData) {
     model:
       resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || undefined,
     price: Number(formData.get("price") || 0),
-    year: Number(formData.get("year") || new Date().getFullYear()),
+    year: Number(formData.get("year") || 2026),
     lengthM: String(formData.get("lengthM") || ""),
     location: String(formData.get("location") || ""),
     engine: String(formData.get("engine") || ""),

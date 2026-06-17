@@ -9,7 +9,12 @@ import { isDbConfigured } from "@/lib/db";
 import {
   countByCategory,
   getListingCategoryFilter,
+  getPriceRangeBounds,
   parseListingCategory,
+  parseListingSort,
+  parsePriceRange,
+  priceRangeFilters,
+  listingSortFilters,
 } from "@/lib/listing-filters";
 import { getAdminListings, getAdminStats } from "@/lib/listings-store";
 
@@ -30,12 +35,15 @@ const tabDescriptions = {
 export default async function AdminListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tab?: string; kategori?: string }>;
+  searchParams: Promise<{ q?: string; tab?: string; kategori?: string; fiyat?: string; sira?: string }>;
 }) {
   const params = await searchParams;
   const tab = parseListingTab(params.tab);
   const kategori = parseListingCategory(params.kategori);
+  const fiyat = parsePriceRange(params.fiyat);
+  const sira = parseListingSort(params.sira);
   const categoryFilter = getListingCategoryFilter(kategori);
+  const priceBounds = getPriceRangeBounds(fiyat);
 
   const statusMap = {
     tumu: undefined,
@@ -53,6 +61,9 @@ export default async function AdminListingsPage({
       boatType: categoryFilter.boatType,
       condition: categoryFilter.condition,
       type: categoryFilter.type,
+      priceMin: priceBounds.min,
+      priceMax: priceBounds.max,
+      sort: sira,
     }),
     getAdminStats(),
     getAdminListings({ status }),
@@ -113,6 +124,8 @@ export default async function AdminListingsPage({
         <ListingCategoryTabs
           activeCategory={kategori}
           activeTab={tab}
+          activePrice={fiyat}
+          activeSort={sira}
           counts={categoryCounts}
           searchQuery={params.q}
         />
@@ -121,12 +134,16 @@ export default async function AdminListingsPage({
       <h2 className="text-sm font-bold text-navy">
         {tabTitles[tab]}
         {kategori ? ` · ${categoryFilter.label}` : ""}
+        {fiyat ? ` · ${priceRangeFilters.find((r) => r.key === fiyat)?.label}` : ""}
+        {sira ? ` · ${listingSortFilters.find((s) => s.key === sira)?.label}` : ""}
         <span className="ml-2 font-normal text-muted">({rows.length})</span>
       </h2>
 
       <form method="get" className="flex flex-wrap gap-2">
         {tab !== "tumu" ? <input type="hidden" name="tab" value={tab} /> : null}
         {kategori ? <input type="hidden" name="kategori" value={kategori} /> : null}
+        {fiyat ? <input type="hidden" name="fiyat" value={fiyat} /> : null}
+        {sira ? <input type="hidden" name="sira" value={sira} /> : null}
         <input
           name="q"
           defaultValue={params.q}

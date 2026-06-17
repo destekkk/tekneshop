@@ -7,6 +7,10 @@ import { submitListingFormAction } from "@/lib/admin/actions";
 
 const initial = { ok: false, message: "", error: "" };
 
+const DEFAULT_YEAR = 2026;
+const YEAR_MIN = 1970;
+const yearOptions = Array.from({ length: DEFAULT_YEAR - YEAR_MIN + 1 }, (_, i) => DEFAULT_YEAR - i);
+
 export default function IlanVerForm({
   user,
 }: {
@@ -57,7 +61,17 @@ export default function IlanVerForm({
         </div>
         <div>
           <label className="text-sm font-medium">Yıl</label>
-          <input name="year" type="number" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <select
+            name="year"
+            defaultValue={DEFAULT_YEAR}
+            className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+          >
+            {yearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

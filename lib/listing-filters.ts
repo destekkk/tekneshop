@@ -67,3 +67,44 @@ export function countByCategory(listings: Listing[]) {
   }
   return counts;
 }
+
+export type PriceRangeKey = "" | "0-500000" | "500000-2000000" | "2000000-";
+
+export const priceRangeFilters: { key: PriceRangeKey; label: string }[] = [
+  { key: "", label: "Tüm fiyatlar" },
+  { key: "0-500000", label: "0 – 500.000 ₺" },
+  { key: "500000-2000000", label: "500.000 – 2.000.000 ₺" },
+  { key: "2000000-", label: "2.000.000 ₺ ve üzeri" },
+];
+
+export function parsePriceRange(key?: string): PriceRangeKey {
+  const found = priceRangeFilters.find((f) => f.key === key);
+  return found?.key ?? "";
+}
+
+export function getPriceRangeBounds(key: PriceRangeKey): { min?: number; max?: number } {
+  switch (key) {
+    case "0-500000":
+      return { min: 0, max: 500_000 };
+    case "500000-2000000":
+      return { min: 500_000, max: 2_000_000 };
+    case "2000000-":
+      return { min: 2_000_000 };
+    default:
+      return {};
+  }
+}
+
+export type ListingSortKey = "" | "tarih-yeni" | "tarih-eski" | "fiyat-artan" | "fiyat-azalan";
+
+export const listingSortFilters: { key: ListingSortKey; label: string }[] = [
+  { key: "", label: "Tarihe göre (önce en yeni)" },
+  { key: "tarih-eski", label: "Tarihe göre (önce en eski)" },
+  { key: "fiyat-artan", label: "Fiyata göre (önce en düşük)" },
+  { key: "fiyat-azalan", label: "Fiyata göre (önce en yüksek)" },
+];
+
+export function parseListingSort(key?: string): ListingSortKey {
+  const found = listingSortFilters.find((f) => f.key === key);
+  return found?.key ?? "";
+}
