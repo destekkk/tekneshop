@@ -5,15 +5,15 @@ import ListingWithAds from "@/components/ListingWithAds";
 import { csyProducts } from "@/lib/csy-products";
 
 export const metadata = {
-  title: "Marin Mağaza | TekneShop × CSY Marine",
-  description: "CSY Marine ürün kataloğu — tekne malzemeleri, boya, elektrik ve elektronik.",
+  title: "Marin Mağaza | TekneShop",
+  description: "Tekne malzemeleri, boya, elektrik ve elektronik ürün kataloğu.",
 };
 
 export default function MagazaPage() {
   return (
     <>
       <ListingPageHeader
-        title="Marin Mağaza — CSY Marine"
+        title="Marin Mağaza"
         count={csyProducts.length}
         crumbs={[
           { label: "Ana Sayfa", href: "/" },

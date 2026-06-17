@@ -1,5 +1,9 @@
-import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
-import { LISTING_NUMBER_START } from "@/lib/listing-number";
+import { and, count, desc, eq, ilike, or } from "drizzle-orm";
+import {
+  demoListingNumber,
+  isValidListingNumber,
+  randomListingNumberCandidate,
+} from "@/lib/listing-number";
 import {
   boatListings,
   type BoatCondition,
@@ -13,7 +17,7 @@ import { listings, type Listing, type NewListing } from "@/lib/db/schema";
 export type ListingStatus = "pending" | "approved" | "rejected" | "archived";
 
 function staticBoatWithNumber(boat: BoatListing, index: number): BoatListing {
-  return { ...boat, listingNumber: LISTING_NUMBER_START + index };
+  return { ...boat, listingNumber: demoListingNumber(index + 1) };
 }
 
 function dbToBoat(row: Listing): BoatListing {
@@ -103,7 +107,7 @@ export async function getAdminListings(opts?: {
   if (!isDbConfigured()) {
     let demo = boatListings.map((b, i) => ({
       id: i + 1,
-      listingNumber: LISTING_NUMBER_START + i,
+      listingNumber: demoListingNumber(i + 1),
       slug: b.slug,
       type: "boat" as const,
       title: b.title,
@@ -116,6 +120,8 @@ export async function getAdminListings(opts?: {
       lengthM: String(b.lengthM),
       location: b.location,
       engine: b.engine ?? null,
+      brand: null,
+      model: null,
       badge: b.badge ?? null,
       image: b.image,
       images: [],
@@ -252,33 +258,42 @@ export function slugify(text: string) {
     .replace(/^-|-$/g, "");
 }
 
+export async function generateUniqueListingNumber() {
+  const db = getDb();
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = randomListingNumberCandidate();
+    const [existing] = await db
+      .select({ id: listings.id })
+      .from(listings)
+      .where(eq(listings.listingNumber, candidate))
+      .limit(1);
+    if (!existing) return candidate;
+  }
+  throw new Error("Benzersiz ilan numarası üretilemedi");
+}
+
+/** @deprecated Use generateUniqueListingNumber */
 export async function nextListingNumber() {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({
-        next: sql<number>`COALESCE(MAX(${listings.listingNumber}), ${LISTING_NUMBER_START - 1}) + 1`,
-      })
-      .from(listings);
-    return row?.next ?? LISTING_NUMBER_START;
+    return await generateUniqueListingNumber();
   } catch {
-    return LISTING_NUMBER_START;
+    return randomListingNumberCandidate();
   }
 }
 
 export async function createListing(data: NewListing) {
   const db = getDb();
   let listingNumber = data.listingNumber;
-  if (!listingNumber) {
+  if (!listingNumber || !isValidListingNumber(listingNumber)) {
     try {
-      listingNumber = await nextListingNumber();
+      listingNumber = await generateUniqueListingNumber();
     } catch {
-      listingNumber = undefined;
+      listingNumber = randomListingNumberCandidate();
     }
   }
   const [row] = await db
     .insert(listings)
-    .values(listingNumber ? { ...data, listingNumber } : data)
+    .values({ ...data, listingNumber })
     .returning();
   return row;
 }
@@ -335,12 +350,17 @@ export async function getAllListingsForExport() {
 
 export async function seedListingsFromStatic() {
   const db = getDb();
-  let num = LISTING_NUMBER_START;
   for (const boat of boatListings) {
+    let listingNumber: number;
+    try {
+      listingNumber = await generateUniqueListingNumber();
+    } catch {
+      listingNumber = randomListingNumberCandidate();
+    }
     await db
       .insert(listings)
       .values({
-        listingNumber: num++,
+        listingNumber,
         slug: boat.slug,
         type: "boat",
         title: boat.title,

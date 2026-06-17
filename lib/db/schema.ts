@@ -42,6 +42,8 @@ export const listings = pgTable("listings", {
   lengthM: text("length_m"),
   location: text("location"),
   engine: text("engine"),
+  brand: text("brand"),
+  model: text("model"),
   badge: text("badge"),
   image: text("image").notNull().default("/boats/placeholder.jpg"),
   images: jsonb("images").$type<string[]>().default([]),
@@ -217,6 +219,10 @@ export const listingInquiries = pgTable("listing_inquiries", {
   senderPhone: text("sender_phone"),
   message: text("message").notNull(),
   read: boolean("read").notNull().default(false),
+  reported: boolean("reported").notNull().default(false),
+  reportReason: text("report_reason"),
+  reportedAt: timestamp("reported_at", { withTimezone: true }),
+  reportedByUserId: integer("reported_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

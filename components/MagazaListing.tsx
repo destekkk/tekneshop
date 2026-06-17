@@ -4,7 +4,7 @@ import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
 import ListingWithAds from "@/components/ListingWithAds";
 import type { CsyMainCategory } from "@/lib/csy-categories";
-import { magazaHref } from "@/lib/csy-categories";
+import { csySubHref } from "@/lib/csy-categories";
 import type { CsyProduct } from "@/lib/csy-products";
 
 type Props = {
@@ -25,8 +25,8 @@ export default function MagazaListing({ main, sub, products, crumbs }: Props) {
           {main.children.map((c) => (
             <Link
               key={c.slug}
-              href={magazaHref(main.slug, c.slug)}
-              className="rounded border border-border bg-card px-3 py-1.5 text-[12px] text-link hover:bg-[#f0f0f0] hover:underline"
+              href={csySubHref(main.slug, c)}
+              className="rounded border border-border bg-card px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wide text-link hover:bg-[#f0f0f0] hover:underline"
             >
               {c.label}
             </Link>
@@ -34,17 +34,6 @@ export default function MagazaListing({ main, sub, products, crumbs }: Props) {
         </div>
       )}
       <ListingToolbar count={products.length} title={title} />
-      <p className="border-b border-border px-4 py-2 text-[11px] text-muted">
-        Ürün kaynağı:{" "}
-        <a
-          href="https://www.csymarine.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-classified hover:underline"
-        >
-          CSY Marine
-        </a>
-      </p>
       <div>
         {products.length > 0 ? (
           <ListingWithAds

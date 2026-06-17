@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/admin/activity";
 import { getSiteConfig, saveSiteConfig, type SiteConfig } from "@/lib/admin/settings";
 import { getAdminSession, requireAdmin } from "@/lib/admin/session";
+import { getUserSession } from "@/lib/auth/user-session";
 import { parseAdScheduleFromForm } from "@/lib/ad-schedule";
 import { deleteAd, upsertAd, type AdPlacement } from "@/lib/ads-store";
 import { isDbConfigured } from "@/lib/db";
@@ -27,16 +28,24 @@ import {
 import {
   createCategory,
   deleteCategory,
-  slugify,
   updateCategory,
 } from "@/lib/categories-store";
 import {
   bulkApprovePending,
   createListing,
   deleteListing,
+  slugify,
   updateListingAdminNotes,
   updateListingStatus,
 } from "@/lib/listings-store";
+import { collectListingImageFiles, uploadListingImages } from "@/lib/listing-images";
+import {
+  brandFormOptions,
+  modelFormOptions,
+  resolveBoatTypeStorage,
+  resolveConditionStorage,
+  resolveSelectWithOther,
+} from "@/lib/boat-form-options";
 import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import {
   createListingSeller,
@@ -53,6 +62,7 @@ import {
   createUser,
   deleteUser,
   getUserByEmail,
+  getUserById,
   getUserByTcNo,
   updateUser,
 } from "@/lib/users-store";
@@ -205,6 +215,50 @@ export async function deleteAdAction(id: number) {
   revalidatePath("/admin/reklamlar");
 }
 
+export async function toggleAdsEnabledAction(enabled: boolean) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) {
+    return { error: "Reklam ayarı için veritabanı gerekli." };
+  }
+
+  const current = await getSiteConfig();
+  await saveSiteConfig({ ...current, adsEnabled: enabled });
+  await logActivity({
+    action: enabled ? "enable_ads" : "disable_ads",
+    entityType: "settings",
+    adminEmail: session.email,
+  });
+
+  revalidatePath("/");
+  revalidatePath("/tekne");
+  revalidatePath("/magaza");
+  revalidatePath("/admin");
+  revalidatePath("/admin/reklamlar");
+
+  return { ok: true, enabled };
+}
+
+export async function toggleListingSubmissionAction(enabled: boolean) {
+  const session = await requireAdmin();
+  if (!isDbConfigured()) {
+    return { error: "İlan ayarı için veritabanı gerekli." };
+  }
+
+  const current = await getSiteConfig();
+  await saveSiteConfig({ ...current, listingSubmissionEnabled: enabled });
+  await logActivity({
+    action: enabled ? "enable_listing_submission" : "disable_listing_submission",
+    entityType: "settings",
+    adminEmail: session.email,
+  });
+
+  revalidatePath("/ilan-ver");
+  revalidatePath("/");
+  revalidatePath("/admin");
+
+  return { ok: true, enabled };
+}
+
 export async function saveSettingsAction(formData: FormData) {
   const session = await requireAdmin();
   if (!isDbConfigured()) return;
@@ -290,7 +344,8 @@ export async function savePackagesPricingAction(formData: FormData) {
     details: { packages: packages.length },
   });
   revalidatePath("/admin/odemeler");
-  revalidatePath("/admin/ayarlar");
+  revalidatePath("/admin");
+  revalidatePath("/ilan-ver");
 }
 
 export async function submitListingFormAction(
@@ -305,7 +360,16 @@ export async function submitListingFormAction(
 }
 
 export async function submitPublicListingAction(formData: FormData) {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    return { error: "İlan vermek için giriş yapmalısınız." };
+  }
+
   const config = await getSiteConfig();
+  if (!config.listingSubmissionEnabled) {
+    return { error: "İlan verme şu an kapalı. Lütfen daha sonra tekrar deneyin." };
+  }
+
   const title = String(formData.get("title") || "").trim();
   if (!title) return { error: "Başlık zorunlu" };
 
@@ -315,25 +379,59 @@ export async function submitPublicListingAction(formData: FormData) {
     return { error: "Telefonun ilanda görünmesi için telefon numarası girin." };
   }
 
+  let contactName = session.name;
+  let contactEmail = session.email;
+  let profilePhone = "";
+
+  if (isDbConfigured()) {
+    const user = await getUserById(session.userId);
+    if (!user || !user.active) {
+      return { error: "Hesabınız aktif değil veya bulunamadı." };
+    }
+    contactName = user.name;
+    contactEmail = user.email;
+    profilePhone = user.phone || "";
+  }
+
   const slug = slugify(title) + "-" + Date.now().toString(36);
+
+  let image = "/boats/placeholder.jpg";
+  let images: string[] = [];
+  const imageFiles = collectListingImageFiles(formData);
+  if (imageFiles.length > 0) {
+    try {
+      const uploaded = await uploadListingImages(imageFiles, slug);
+      image = uploaded[0] || image;
+      images = uploaded.slice(1);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Fotoğraflar yüklenemedi.";
+      return { error: msg };
+    }
+  }
+
   const listingData = {
     slug,
     type: "boat" as const,
     title,
     description: String(formData.get("description") || ""),
     status: config.moderationRequired ? ("pending" as const) : ("approved" as const),
-    condition: String(formData.get("condition") || "ikinci-el"),
-    boatType: String(formData.get("boatType") || "motoryat"),
+    condition: resolveConditionStorage(formData),
+    boatType: resolveBoatTypeStorage(formData),
+    brand:
+      resolveSelectWithOther(formData, "brand", "brandOther", brandFormOptions) || undefined,
+    model:
+      resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || undefined,
     price: Number(formData.get("price") || 0),
     year: Number(formData.get("year") || new Date().getFullYear()),
     lengthM: String(formData.get("lengthM") || ""),
     location: String(formData.get("location") || ""),
     engine: String(formData.get("engine") || ""),
-    contactName: String(formData.get("contactName") || ""),
-    contactEmail: String(formData.get("contactEmail") || ""),
-    contactPhone,
+    contactName,
+    contactEmail,
+    contactPhone: contactPhone || profilePhone,
     showContactPhone,
-    image: "/boats/placeholder.jpg",
+    image,
+    images,
     feePaid: config.listingPricing.freePeriod || !config.listingPricing.enabled,
     feeAmount: config.listingPricing.enabled ? config.listingPricing.pricePerListing : 0,
     source: "user",
@@ -341,20 +439,15 @@ export async function submitPublicListingAction(formData: FormData) {
   };
 
   if (!isDbConfigured()) {
-    return {
-      ok: true,
-      message:
-        "İlanınız alındı (demo). Canlı moderasyon için Neon veritabanı bağlantısı gerekiyor.",
-    };
+    return { error: "İlan vermek için veritabanı bağlantısı gerekli." };
   }
 
   await createListing(listingData);
 
-  const contactEmail = listingData.contactEmail.trim();
   if (contactEmail && formData.get("emailConsent") === "on") {
     await upsertSubscriber({
       email: contactEmail,
-      name: listingData.contactName || undefined,
+      name: contactName || undefined,
       source: "listing",
     });
   }

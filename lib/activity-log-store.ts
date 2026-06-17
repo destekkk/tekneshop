@@ -13,6 +13,10 @@ export const actionLabels: Record<string, string> = {
   update_ad: "Reklam güncellendi",
   delete_ad: "Reklam silindi",
   update_settings: "Ayarlar güncellendi",
+  enable_ads: "Reklam alanları açıldı",
+  disable_ads: "Reklam alanları kapatıldı",
+  enable_listing_submission: "İlan verme açıldı",
+  disable_listing_submission: "İlan verme kapatıldı",
   update_package_pricing: "Paket fiyatları güncellendi",
   create_category: "Kategori eklendi",
   update_category: "Kategori güncellendi",
@@ -37,6 +41,7 @@ export const actionLabels: Record<string, string> = {
   delete_offer: "Teklif silindi",
   read_listing_inquiry: "İlan mesajı okundu",
   delete_listing_inquiry: "İlan mesajı silindi",
+  report_listing_inquiry: "İlan mesajı şikayet edildi",
 };
 
 export async function getRecentActivity(limit = 30) {

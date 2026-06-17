@@ -1,7 +1,7 @@
 import ListingActions from "@/components/admin/ListingActions";
 import ListingNoteForm from "@/components/admin/ListingNoteForm";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { boatTypeLabels, conditionLabels, formatPrice } from "@/lib/boats";
+import { boatTypeLabel, conditionLabel, formatPrice } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
 import type { Listing } from "@/lib/db/schema";
 
@@ -48,11 +48,16 @@ export default function AdminListingsTable({ rows }: { rows: Listing[] }) {
                   : row.type === "service"
                     ? "Hizmet"
                     : row.boatType
-                      ? boatTypeLabels[row.boatType as keyof typeof boatTypeLabels] || row.boatType
+                      ? boatTypeLabel(row.boatType)
                       : "Tekne"}
                 {row.condition ? (
                   <span className="block text-[11px] text-muted">
-                    {conditionLabels[row.condition as keyof typeof conditionLabels] || row.condition}
+                    {conditionLabel(row.condition)}
+                  </span>
+                ) : null}
+                {row.brand || row.model ? (
+                  <span className="block text-[11px] text-muted">
+                    {[row.brand, row.model].filter(Boolean).join(" · ")}
                   </span>
                 ) : null}
               </td>

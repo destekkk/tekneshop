@@ -58,7 +58,7 @@ export default function AdminSidebar({
   };
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-navy text-white lg:w-64">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-navy text-white lg:w-64">
       <div className="flex items-center gap-2 border-b border-white/10 px-4 py-4">
         <span className="flex h-9 w-9 items-center justify-center rounded bg-turquoise text-navy">
           <Anchor size={18} />
@@ -69,7 +69,7 @@ export default function AdminSidebar({
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 p-3">
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-3">
         {nav.map((item) => {
           const active = item.exact
             ? pathname === item.href
@@ -95,7 +95,7 @@ export default function AdminSidebar({
         })}
       </nav>
 
-      <div className="space-y-2 border-t border-white/10 p-3">
+      <div className="shrink-0 space-y-2 border-t border-white/10 p-3">
         <Link
           href="/"
           target="_blank"
@@ -106,7 +106,7 @@ export default function AdminSidebar({
         <form action={adminLogoutAction}>
           <button
             type="submit"
-            className="w-full rounded px-3 py-2 text-left text-[12px] text-white/70 hover:bg-white/10"
+            className="w-full rounded border border-white/20 bg-white/10 px-3 py-2 text-left text-[12px] font-semibold text-white hover:bg-white/15"
           >
             Çıkış yap
           </button>

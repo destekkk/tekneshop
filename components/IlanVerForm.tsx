@@ -1,11 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
+import ListingImageUpload from "@/components/ListingImageUpload";
+import BoatListingFields from "@/components/BoatListingFields";
 import { submitListingFormAction } from "@/lib/admin/actions";
 
 const initial = { ok: false, message: "", error: "" };
 
-export default function IlanVerForm() {
+export default function IlanVerForm({
+  user,
+}: {
+  user: { name: string; email: string; phone?: string | null };
+}) {
   const [state, action, pending] = useActionState(submitListingFormAction, initial);
 
   return (
@@ -34,26 +40,7 @@ export default function IlanVerForm() {
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="text-sm font-medium">Durum</label>
-          <select name="condition" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm">
-            <option value="sifir">Sıfır</option>
-            <option value="ikinci-el">İkinci el</option>
-            <option value="kiralik">Kiralık</option>
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-medium">Tekne tipi</label>
-          <select name="boatType" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm">
-            <option value="motoryat">Motoryat</option>
-            <option value="yelkenli">Yelkenli</option>
-            <option value="sisme-bot">Şişme bot</option>
-            <option value="jet-ski">Jet ski</option>
-            <option value="katamaran">Katamaran</option>
-          </select>
-        </div>
-      </div>
+      <BoatListingFields />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium">Fiyat (₺)</label>
@@ -78,18 +65,37 @@ export default function IlanVerForm() {
         <label className="text-sm font-medium">Motor</label>
         <input name="engine" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <ListingImageUpload />
+      <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium">Ad Soyad</label>
-          <input name="contactName" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input
+            name="contactName"
+            defaultValue={user.name}
+            readOnly
+            className="mt-1 w-full rounded-lg border border-border bg-[#fafafa] px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="text-sm font-medium">Telefon</label>
-          <input name="contactPhone" type="tel" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input
+            name="contactPhone"
+            type="tel"
+            defaultValue={user.phone || ""}
+            placeholder="05xx xxx xx xx"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
         </div>
-        <div>
+        <div className="sm:col-span-2">
           <label className="text-sm font-medium">E-posta</label>
-          <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" />
+          <input
+            name="contactEmail"
+            type="email"
+            defaultValue={user.email}
+            readOnly
+            className="mt-1 w-full rounded-lg border border-border bg-[#fafafa] px-3 py-2 text-sm"
+          />
+          <p className="mt-1 text-[11px] text-muted">Hesabınıza kayıtlı e-posta kullanılır.</p>
         </div>
       </div>
       <fieldset className="space-y-2 rounded-lg border border-border bg-[#fafafa] p-4">

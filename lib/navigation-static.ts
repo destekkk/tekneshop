@@ -1,4 +1,4 @@
-import { csyCategories, magazaHref } from "@/lib/csy-categories";
+import { csyCategories, csySidebarHiddenSlugs, csySubHref, magazaHref } from "@/lib/csy-categories";
 import type { NavSection } from "@/lib/navigation-types";
 
 export const staticMenuSections: NavSection[] = [
@@ -17,13 +17,15 @@ export const staticMenuSections: NavSection[] = [
       { label: "Jet Ski & PWC", href: "/tekne/jet-ski" },
     ],
   },
-  ...csyCategories.map((cat) => ({
+  ...csyCategories
+    .filter((cat) => !csySidebarHiddenSlugs.has(cat.slug))
+    .map((cat) => ({
     id: cat.slug,
     label: cat.label,
     href: magazaHref(cat.slug),
     children: cat.children.map((sub) => ({
       label: sub.label,
-      href: magazaHref(cat.slug, sub.slug),
+      href: csySubHref(cat.slug, sub),
     })),
   })),
 ];

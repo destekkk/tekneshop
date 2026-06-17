@@ -9,8 +9,8 @@ import { getCurrentUser } from "@/lib/auth/user-session";
 import { getSiteConfig } from "@/lib/admin/settings";
 import { getSiteUrl } from "@/lib/email/config";
 import {
-  boatTypeLabels,
-  conditionLabels,
+  boatTypeLabel,
+  conditionLabel,
   formatPrice,
   boatListings,
 } from "@/lib/boats";
@@ -40,6 +40,12 @@ export default async function BoatDetailPage({ params }: Props) {
   ]);
   if (!boat) notFound();
   const listingUrl = `${getSiteUrl()}/tekne/ilan/${slug}`;
+  const conditionText = listing?.condition
+    ? conditionLabel(listing.condition)
+    : conditionLabel(boat.condition);
+  const boatTypeText = listing?.boatType
+    ? boatTypeLabel(listing.boatType)
+    : boatTypeLabel(boat.boatType);
   const existingOffer =
     user && listing ? await getUserOfferForListing(user.id, listing.id) : null;
 
@@ -74,12 +80,24 @@ export default async function BoatDetailPage({ params }: Props) {
               ) : null}
               <tr className="border-b border-border">
                 <td className="py-2 pr-4 text-muted">İlan tipi</td>
-                <td className="py-2 font-medium">{conditionLabels[boat.condition]}</td>
+                <td className="py-2 font-medium">{conditionText}</td>
               </tr>
               <tr className="border-b border-border">
                 <td className="py-2 pr-4 text-muted">Kategori</td>
-                <td className="py-2 font-medium">{boatTypeLabels[boat.boatType]}</td>
+                <td className="py-2 font-medium">{boatTypeText}</td>
               </tr>
+              {listing?.brand ? (
+                <tr className="border-b border-border">
+                  <td className="py-2 pr-4 text-muted">Marka</td>
+                  <td className="py-2 font-medium">{listing.brand}</td>
+                </tr>
+              ) : null}
+              {listing?.model ? (
+                <tr className="border-b border-border">
+                  <td className="py-2 pr-4 text-muted">Model</td>
+                  <td className="py-2 font-medium">{listing.model}</td>
+                </tr>
+              ) : null}
               <tr className="border-b border-border">
                 <td className="py-2 pr-4 text-muted">Yıl</td>
                 <td className="py-2 font-medium">{boat.year}</td>

@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import InlineAdSlot from "@/components/InlineAdSlot";
+import { getSiteConfig } from "@/lib/admin/settings";
 
 type Props<T> = {
   items: T[];
@@ -16,6 +17,9 @@ export default async function ListingWithAds<T>({
 }: Props<T>) {
   if (items.length === 0) return null;
 
+  const config = await getSiteConfig();
+  const showAds = config.adsEnabled;
+
   let adIndex = 0;
 
   return (
@@ -23,7 +27,7 @@ export default async function ListingWithAds<T>({
       {items.map((item, index) => (
         <Fragment key={getKey(item)}>
           {renderItem(item)}
-          {(index + 1) % every === 0 && index < items.length - 1 && (
+          {showAds && (index + 1) % every === 0 && index < items.length - 1 && (
             <InlineAdSlot slot={++adIndex} />
           )}
         </Fragment>

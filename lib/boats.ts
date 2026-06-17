@@ -5,7 +5,8 @@ export type BoatType =
   | "yelkenli"
   | "sisme-bot"
   | "jet-ski"
-  | "katamaran";
+  | "katamaran"
+  | "diger";
 
 export type BoatListing = {
   listingNumber?: number;
@@ -33,6 +34,7 @@ export const boatTypeLabels: Record<BoatType, string> = {
   "sisme-bot": "Şişme Bot",
   "jet-ski": "Jet Ski & PWC",
   katamaran: "Katamaran",
+  diger: "Diğer",
 };
 
 export const conditionLabels: Record<BoatCondition, string> = {
@@ -40,6 +42,14 @@ export const conditionLabels: Record<BoatCondition, string> = {
   "ikinci-el": "İkinci El",
   kiralik: "Kiralık",
 };
+
+export function conditionLabel(value: string) {
+  return conditionLabels[value as BoatCondition] ?? value;
+}
+
+export function boatTypeLabel(value: string) {
+  return boatTypeLabels[value as BoatType] ?? value;
+}
 
 export const boatListings: BoatListing[] = [
   {

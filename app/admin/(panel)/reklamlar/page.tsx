@@ -1,10 +1,12 @@
 import AdForm from "@/components/admin/AdForm";
+import AdsEnabledToggle from "@/components/admin/AdsEnabledToggle";
 import { formatAdSchedule, getAdScheduleStatus } from "@/lib/ad-schedule";
 import { getAllAds } from "@/lib/ads-store";
+import { getSiteConfig } from "@/lib/admin/settings";
 import { isDbConfigured } from "@/lib/db";
 
 export default async function AdminAdsPage() {
-  const ads = await getAllAds();
+  const [ads, config] = await Promise.all([getAllAds(), getSiteConfig()]);
 
   return (
     <div className="space-y-6">
@@ -15,6 +17,8 @@ export default async function AdminAdsPage() {
           raporlara bağlanacak.
         </p>
       </div>
+
+      <AdsEnabledToggle enabled={config.adsEnabled ?? false} />
 
       {!isDbConfigured() ? (
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-[13px]">

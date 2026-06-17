@@ -1,5 +1,5 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { csyCategories, magazaHref } from "@/lib/csy-categories";
+import { csyCategories, csySidebarHiddenSlugs, csySubHref, magazaHref } from "@/lib/csy-categories";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { categories, type Category } from "@/lib/db/schema";
 import type { NavItem, NavSection } from "@/lib/navigation-types";
@@ -64,7 +64,21 @@ export async function getMenuSections(): Promise<NavSection[]> {
     const db = getDb();
     const rows = await db.select().from(categories).orderBy(asc(categories.sortOrder));
     if (rows.length === 0) return staticMenuSections;
-    return rowsToNavSections(rows);
+    const sections = rowsToNavSections(rows);
+    return sections
+      .filter((s) => !csySidebarHiddenSlugs.has(s.id))
+      .map((s) => {
+        if (s.id !== "tekne-malzemeleri" && s.id !== "elektronik") return s;
+        const csy = csyCategories.find((c) => c.slug === s.id);
+        if (!csy) return s;
+        return {
+          ...s,
+          children: csy.children.map((sub) => ({
+            label: sub.label,
+            href: csySubHref(csy.slug, sub),
+          })),
+        };
+      });
   } catch {
     return staticMenuSections;
   }
@@ -121,6 +135,18 @@ export async function getMainCategory(slug: string) {
       .limit(1);
     if (!main || main.navType !== "magaza") {
       return csyCategories.find((c) => c.slug === slug);
+    }
+    const csy = csyCategories.find((c) => c.slug === slug);
+    if (csy && (slug === "tekne-malzemeleri" || slug === "elektronik")) {
+      return {
+        slug: main.slug,
+        label: main.label,
+        children: csy.children.map((s) => ({
+          slug: s.slug,
+          label: s.label,
+          href: s.href,
+        })),
+      };
     }
     const subs = await db
       .select()
@@ -249,6 +275,7 @@ export async function seedCategoriesFromStatic() {
         parentId: main.id,
         navType: "magaza",
         sortOrder: j,
+        href: sub.href ?? null,
       });
     }
   }
@@ -274,12 +301,21 @@ export async function getMagazaSubParams(): Promise<{ category: string; sub: str
   const params: { category: string; sub: string }[] = [];
   for (const main of tree) {
     if (main.navType !== "magaza") continue;
-    for (const sub of main.children) {
-      params.push({ category: main.slug, sub: sub.slug });
+    const csy = csyCategories.find((c) => c.slug === main.slug);
+    const childSlugs =
+      (main.slug === "tekne-malzemeleri" || main.slug === "elektronik") && csy
+        ? csy.children.filter((s) => !s.href).map((s) => s.slug)
+        : main.children.filter((sub) => !sub.href).map((sub) => sub.slug);
+    for (const subSlug of childSlugs) {
+      params.push({ category: main.slug, sub: subSlug });
     }
   }
   if (params.length === 0) {
-    return csyCategories.flatMap((c) => c.children.map((s) => ({ category: c.slug, sub: s.slug })));
+    return csyCategories.flatMap((c) =>
+      c.children
+        .filter((s) => !s.href)
+        .map((s) => ({ category: c.slug, sub: s.slug })),
+    );
   }
   return params;
 }

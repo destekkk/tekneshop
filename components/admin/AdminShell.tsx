@@ -1,4 +1,6 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTopBar from "@/components/admin/AdminTopBar";
+import { getAdminSession } from "@/lib/admin/session";
 import { getUnreadListingInquiryCount } from "@/lib/listing-inquiries-store";
 import { getUnreadMessageCount } from "@/lib/messages-store";
 import { getPendingOfferCount } from "@/lib/offers-store";
@@ -20,6 +22,8 @@ export default async function AdminShell({ children }: { children: React.ReactNo
     // DB veya ağ hatasında panel çökmesin
   }
 
+  const session = await getAdminSession();
+
   return (
     <div className="flex min-h-screen bg-[#f4f6f8]">
       <AdminSidebar
@@ -28,6 +32,7 @@ export default async function AdminShell({ children }: { children: React.ReactNo
         pendingOfferCount={pendingOffers}
       />
       <div className="flex min-w-0 flex-1 flex-col">
+        <AdminTopBar email={session.email} unreadCount={unread} />
         <main className="flex-1 p-4 lg:p-6">{children}</main>
       </div>
     </div>

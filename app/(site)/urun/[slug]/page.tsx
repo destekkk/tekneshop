@@ -55,17 +55,6 @@ export default async function ProductPage({ params }: Props) {
           <h1 className="mt-2 text-[20px] font-bold">{product.name}</h1>
           <p className="mt-4 text-[22px] font-bold text-navy">{formatPrice(product.price)}</p>
           <p className="mt-6 text-[13px] leading-relaxed text-muted">{product.description}</p>
-          <p className="mt-4 text-[12px] text-muted">
-            Tedarik:{" "}
-            <a
-              href="https://www.csymarine.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-classified hover:underline"
-            >
-              csymarine.com
-            </a>
-          </p>
           <button type="button" className="btn-cta mt-6 rounded-sm px-8 py-3 text-sm">
             Sepete ekle (yakında)
           </button>

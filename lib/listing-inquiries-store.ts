@@ -1,6 +1,10 @@
-import { count, desc, eq } from "drizzle-orm";
+import { count, desc, eq, sql } from "drizzle-orm";
 import { getDb, isDbConfigured } from "@/lib/db";
-import { listingInquiries, type ListingInquiry } from "@/lib/db/schema";
+import { listingInquiries, listings, type ListingInquiry } from "@/lib/db/schema";
+
+export type OwnerListingInquiry = ListingInquiry & {
+  listingSlug: string | null;
+};
 
 export async function createListingInquiry(data: {
   listingId: number;
@@ -27,6 +31,85 @@ export async function createListingInquiry(data: {
   return row;
 }
 
+export async function getListingInquiryById(id: number) {
+  if (!isDbConfigured()) return null;
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(listingInquiries)
+      .where(eq(listingInquiries.id, id))
+      .limit(1);
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getListingInquiriesForOwner(ownerEmail: string) {
+  if (!isDbConfigured()) return [] as OwnerListingInquiry[];
+  try {
+    const db = getDb();
+    const email = ownerEmail.trim().toLowerCase();
+    const rows = await db
+      .select({
+        inquiry: listingInquiries,
+        listingSlug: listings.slug,
+      })
+      .from(listingInquiries)
+      .innerJoin(listings, eq(listings.id, listingInquiries.listingId))
+      .where(sql`LOWER(${listings.contactEmail}) = ${email}`)
+      .orderBy(desc(listingInquiries.createdAt));
+    return rows.map((r) => ({ ...r.inquiry, listingSlug: r.listingSlug }));
+  } catch {
+    return [];
+  }
+}
+
+export async function reportListingInquiry(
+  inquiryId: number,
+  reporterUserId: number,
+  reporterEmail: string,
+  reason: string,
+) {
+  if (!isDbConfigured()) {
+    return { ok: false as const, error: "Şikayet için veritabanı gerekli." };
+  }
+
+  const inquiry = await getListingInquiryById(inquiryId);
+  if (!inquiry) {
+    return { ok: false as const, error: "Mesaj bulunamadı." };
+  }
+  if (inquiry.reported) {
+    return { ok: false as const, error: "Bu mesaj zaten şikayet edilmiş." };
+  }
+
+  const db = getDb();
+  const [listing] = await db
+    .select({ contactEmail: listings.contactEmail })
+    .from(listings)
+    .where(eq(listings.id, inquiry.listingId))
+    .limit(1);
+
+  const ownerEmail = listing?.contactEmail?.trim().toLowerCase();
+  if (!ownerEmail || ownerEmail !== reporterEmail.trim().toLowerCase()) {
+    return { ok: false as const, error: "Bu mesajı şikayet etme yetkiniz yok." };
+  }
+
+  await db
+    .update(listingInquiries)
+    .set({
+      reported: true,
+      reportReason: reason.trim(),
+      reportedAt: new Date(),
+      reportedByUserId: reporterUserId,
+      read: false,
+    })
+    .where(eq(listingInquiries.id, inquiryId));
+
+  return { ok: true as const };
+}
+
 export async function getListingInquiries() {
   if (!isDbConfigured()) return [] as ListingInquiry[];
   try {
@@ -34,7 +117,7 @@ export async function getListingInquiries() {
     return await db
       .select()
       .from(listingInquiries)
-      .orderBy(desc(listingInquiries.createdAt));
+      .orderBy(desc(listingInquiries.reported), desc(listingInquiries.createdAt));
   } catch {
     return [];
   }
@@ -48,6 +131,20 @@ export async function getUnreadListingInquiryCount() {
       .select({ c: count() })
       .from(listingInquiries)
       .where(eq(listingInquiries.read, false));
+    return row.c;
+  } catch {
+    return 0;
+  }
+}
+
+export async function getReportedListingInquiryCount() {
+  if (!isDbConfigured()) return 0;
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({ c: count() })
+      .from(listingInquiries)
+      .where(eq(listingInquiries.reported, true));
     return row.c;
   } catch {
     return 0;

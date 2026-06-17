@@ -23,6 +23,10 @@ export type SiteConfig = {
   maintenanceMode: boolean;
   maintenanceMessage: string;
   seoDescription: string;
+  /** Üst banner ve liste içi reklam alanları */
+  adsEnabled: boolean;
+  /** Kullanıcıların ilan vermesine izin */
+  listingSubmissionEnabled: boolean;
 };
 
 export const defaultSiteConfig: SiteConfig = {
@@ -34,6 +38,8 @@ export const defaultSiteConfig: SiteConfig = {
   maintenanceMode: false,
   maintenanceMessage: "Bakım çalışması yapılıyor. Kısa süre sonra tekrar deneyin.",
   seoDescription: "Sıfır ve ikinci el tekne ilanları, yedek parça ve denizcilik ekipmanları.",
+  adsEnabled: false,
+  listingSubmissionEnabled: true,
   moderationRequired: true,
   maxPhotosPerListing: 12,
   listingPricing: {

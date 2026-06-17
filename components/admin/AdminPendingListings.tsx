@@ -2,7 +2,7 @@ import BulkApproveButton from "@/components/admin/BulkApproveButton";
 import ListingActions from "@/components/admin/ListingActions";
 import ListingNoteForm from "@/components/admin/ListingNoteForm";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/boats";
+import { boatTypeLabel, conditionLabel, formatPrice } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
 import type { Listing } from "@/lib/db/schema";
 
@@ -24,8 +24,11 @@ export default function AdminPendingListings({ rows }: { rows: Listing[] }) {
                 <StatusBadge status={row.status} />
               </div>
               <p className="mt-1 text-[13px] text-muted">
-                {formatPrice(row.price)} · {row.location || "Konum yok"} · {row.condition} /{" "}
-                {row.boatType}
+                {formatPrice(row.price)} · {row.location || "Konum yok"} ·{" "}
+                {conditionLabel(row.condition || "")} / {boatTypeLabel(row.boatType || "")}
+                {row.brand || row.model
+                  ? ` · ${[row.brand, row.model].filter(Boolean).join(" ")}`
+                  : ""}
               </p>
               {row.description ? <p className="mt-2 text-[13px]">{row.description}</p> : null}
               <p className="mt-2 text-[12px] text-muted">

@@ -3,6 +3,7 @@ import BoatCard from "@/components/BoatCard";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import ListingToolbar from "@/components/ListingToolbar";
 import ListingWithAds from "@/components/ListingWithAds";
+import TekneCategoryLinks from "@/components/TekneCategoryLinks";
 import { filterApprovedBoats } from "@/lib/listings-store";
 import { isTekneFilterKey, tekneFilters, type TekneFilterKey } from "@/lib/tekne-routes";
 
@@ -42,6 +43,9 @@ export default async function TekneFilterPage({ params }: Props) {
           { label: cfg.title },
         ]}
       />
+      <div className="border-b border-border bg-[#fafafa] px-4 py-2">
+        <TekneCategoryLinks activeHref={`/tekne/${filter}`} compact />
+      </div>
       <ListingToolbar count={items.length} title={cfg.title} />
       <div>
         {items.length > 0 ? (

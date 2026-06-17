@@ -123,7 +123,12 @@ const statements = [
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS admin_notes TEXT`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS listing_number INTEGER UNIQUE`,
   `ALTER TABLE listings ADD COLUMN IF NOT EXISTS show_contact_phone BOOLEAN NOT NULL DEFAULT false`,
-  `UPDATE listings SET listing_number = 1000000 + id WHERE listing_number IS NULL`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS brand TEXT`,
+  `ALTER TABLE listings ADD COLUMN IF NOT EXISTS model TEXT`,
+  `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS report_reason TEXT`,
+  `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ`,
+  `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`,
   `CREATE TABLE IF NOT EXISTS announcements (
     id SERIAL PRIMARY KEY,
     message TEXT NOT NULL,
@@ -234,3 +239,127 @@ for (const stmt of statements) {
 }
 
 console.log("\nVeritabanı tabloları hazır.");
+
+const magazaOrder = [
+  "tekne-malzemeleri",
+  "aydinlatma",
+  "boya-bakim",
+  "elektrik",
+  "elektronik",
+  "spor-outdoor",
+  "sisme-bot",
+  "motor-aksami",
+  "karavan",
+];
+
+for (const [i, slug] of magazaOrder.entries()) {
+  await sql`
+    UPDATE categories
+    SET sort_order = ${i + 1}
+    WHERE slug = ${slug} AND parent_id IS NULL
+  `;
+}
+console.log("✓ kategori sırası güncellendi");
+
+const listingRows = await sql`SELECT id, listing_number FROM listings ORDER BY id`;
+const usedNumbers = new Set();
+for (const row of listingRows) {
+  const n = row.listing_number;
+  if (n >= 10000 && n <= 99999 && !usedNumbers.has(n)) {
+    usedNumbers.add(n);
+    continue;
+  }
+  let candidate;
+  do {
+    candidate = 10000 + Math.floor(Math.random() * 90000);
+  } while (usedNumbers.has(candidate));
+  usedNumbers.add(candidate);
+  await sql`UPDATE listings SET listing_number = ${candidate} WHERE id = ${row.id}`;
+}
+if (listingRows.length > 0) {
+  console.log("✓ ilan numaraları (5 hane) güncellendi");
+}
+
+const tekneMalzSubs = [
+  ["bas-pervanesi", "Baş Pervanesi", null],
+  ["boya-bakim", "Boya / Bakım", "/magaza/boya-bakim"],
+  ["duzen-kumanda", "Dümen / Kumanda", null],
+  ["demirleme", "Demirleme / Rıhtım", null],
+  ["elektrik", "Elektrik", "/magaza/elektrik"],
+  ["guvenlik", "Güvenlik", null],
+  ["guverte", "Güverte", null],
+  ["havalandirma", "Havalandırma", null],
+  ["kabin", "Kabin", null],
+  ["navigasyon", "Navigasyon", null],
+  ["tuvalet-pis-su", "Atık Su / Tuvalet", null],
+  ["sintine-pompalari", "Sintine Pompaları", null],
+  ["tatli-su", "Tatlı Su", null],
+  ["usturmaça", "Usturmaça ve Ekipmanı", null],
+  ["yakit-sistemi", "Yakıt Sistemi", null],
+  ["hidrofor-pompalari", "Hidrofor Pompaları", null],
+  ["motor-aksami", "Motor Aksamı", "/magaza/motor-aksami"],
+  ["mutfak", "Mutfak Malzemeleri", null],
+  ["yelken", "Yelken", null],
+  ["aydinlatma", "Aydınlatma", "/magaza/aydinlatma"],
+];
+
+const tekneMalzRows =
+  await sql`SELECT id FROM categories WHERE slug = 'tekne-malzemeleri' AND parent_id IS NULL LIMIT 1`;
+if (tekneMalzRows.length > 0) {
+  const parentId = tekneMalzRows[0].id;
+  for (const [i, [slug, label, href]] of tekneMalzSubs.entries()) {
+    const existing = await sql`
+      SELECT id FROM categories WHERE parent_id = ${parentId} AND slug = ${slug} LIMIT 1
+    `;
+    if (existing.length > 0) {
+      await sql`
+        UPDATE categories
+        SET label = ${label}, sort_order = ${i}, href = ${href}, active = true, updated_at = NOW()
+        WHERE id = ${existing[0].id}
+      `;
+    } else {
+      await sql`
+        INSERT INTO categories (slug, label, parent_id, nav_type, sort_order, href, active)
+        VALUES (${slug}, ${label}, ${parentId}, 'magaza', ${i}, ${href}, true)
+      `;
+    }
+  }
+  console.log("✓ tekne malzemeleri alt kategorileri güncellendi");
+}
+
+const elektronikSubs = [
+  ["balik-bulucular", "Balık Bulucular"],
+  ["marin-muzik-sistemleri", "Marin Müzik Sistemleri"],
+  ["marin-hoparlorler", "Marin Hoparlörler"],
+  ["marin-telsizler", "Marin Telsizler"],
+  ["anten", "Anten"],
+  ["dynaplate", "Dynaplate"],
+  ["derinlik-gostergesi", "Derinlik Göstergesi"],
+  ["marin-amfiler", "Marin Amfiler"],
+  ["marin-kameralar", "Marin Kameralar"],
+  ["oto-pilot", "Oto Pilot"],
+];
+
+const elektronikRows =
+  await sql`SELECT id FROM categories WHERE slug = 'elektronik' AND parent_id IS NULL LIMIT 1`;
+if (elektronikRows.length > 0) {
+  const parentId = elektronikRows[0].id;
+  for (const [i, [slug, label]] of elektronikSubs.entries()) {
+    const existing = await sql`
+      SELECT id FROM categories WHERE parent_id = ${parentId} AND slug = ${slug} LIMIT 1
+    `;
+    if (existing.length > 0) {
+      await sql`
+        UPDATE categories
+        SET label = ${label}, sort_order = ${i}, active = true, updated_at = NOW()
+        WHERE id = ${existing[0].id}
+      `;
+    } else {
+      await sql`
+        INSERT INTO categories (slug, label, parent_id, nav_type, sort_order, active)
+        VALUES (${slug}, ${label}, ${parentId}, 'magaza', ${i}, true)
+      `;
+    }
+  }
+  console.log("✓ elektronik alt kategorileri güncellendi");
+}

@@ -8,6 +8,7 @@ export default async function AdminMessagesPage() {
   const [messages, inquiries] = await Promise.all([getContactMessages(), getListingInquiries()]);
   const unreadContact = messages.filter((m) => !m.read).length;
   const unreadInquiries = inquiries.filter((m) => !m.read).length;
+  const reportedInquiries = inquiries.filter((m) => m.reported).length;
   const unread = unreadContact + unreadInquiries;
 
   return (
@@ -27,7 +28,12 @@ export default async function AdminMessagesPage() {
           ) : null}
         </h2>
         <p className="text-[12px] text-muted">
-          Telefonu gizli ilanlara gelen satıcı mesajları
+          Telefonu gizli ilanlara gelen mesajlar
+          {reportedInquiries > 0 ? (
+            <span className="ml-1 font-semibold text-rose-700">
+              · {reportedInquiries} şikayet
+            </span>
+          ) : null}
         </p>
         <ListingInquiriesManager inquiries={inquiries} dbConnected={isDbConfigured()} />
       </section>

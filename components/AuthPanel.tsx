@@ -21,7 +21,7 @@ export default function AuthPanel({
         <button
           type="button"
           onClick={() => setTab("login")}
-          className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors ${
+          className={`flex-1 px-4 py-3 text-[13px] font-semibold transition-colors ${
             tab === "login"
               ? "border-b-2 border-navy bg-white text-navy"
               : "bg-[#fafafa] text-muted hover:text-foreground"
@@ -32,7 +32,7 @@ export default function AuthPanel({
         <button
           type="button"
           onClick={() => setTab("register")}
-          className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors ${
+          className={`flex-1 px-4 py-3 text-[13px] font-semibold transition-colors ${
             tab === "register"
               ? "border-b-2 border-navy bg-white text-navy"
               : "bg-[#fafafa] text-muted hover:text-foreground"

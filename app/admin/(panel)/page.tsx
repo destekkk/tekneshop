@@ -1,5 +1,9 @@
 import Link from "next/link";
+import AdsEnabledToggle from "@/components/admin/AdsEnabledToggle";
+import ListingSubmissionToggle from "@/components/admin/ListingSubmissionToggle";
+import PackagePricingForm from "@/components/admin/PackagePricingForm";
 import StatCard from "@/components/admin/StatCard";
+import { formatMoney } from "@/lib/accounting-store";
 import { actionLabels, getRecentActivity } from "@/lib/activity-log-store";
 import { getAdminSession } from "@/lib/admin/session";
 import { getSiteConfig } from "@/lib/admin/settings";
@@ -32,6 +36,41 @@ export default async function AdminDashboardPage() {
           <strong>Neon veritabanı bağlı değil.</strong> Panel demo modda çalışıyor.
         </div>
       ) : null}
+
+      <AdsEnabledToggle enabled={config.adsEnabled ?? false} />
+      <ListingSubmissionToggle enabled={config.listingSubmissionEnabled !== false} />
+
+      <section className="rounded-lg border border-border bg-white p-4">
+        <h2 className="text-sm font-bold text-navy">İlan ücret ayarları</h2>
+        <p className="mt-1 text-[12px] text-muted">
+          Ücretsiz dönem, tek ilan fiyatı, vitrin ücreti ve paketleri buradan yönetin.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded border border-border bg-[#fafafa] px-3 py-2">
+            <p className="text-[11px] text-muted">Durum</p>
+            <p className="text-[14px] font-bold">
+              {config.listingPricing.freePeriod
+                ? "Ücretsiz dönem"
+                : config.listingPricing.enabled
+                  ? "Ücretli"
+                  : "Ücretsiz"}
+            </p>
+          </div>
+          <div className="rounded border border-border bg-[#fafafa] px-3 py-2">
+            <p className="text-[11px] text-muted">Tek ilan</p>
+            <p className="text-[14px] font-bold">{formatMoney(config.listingPricing.pricePerListing)}</p>
+          </div>
+          <div className="rounded border border-border bg-[#fafafa] px-3 py-2">
+            <p className="text-[11px] text-muted">Vitrin</p>
+            <p className="text-[14px] font-bold">
+              {formatMoney(config.listingPricing.featuredListingPrice)}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <PackagePricingForm pricing={config.listingPricing} dbConnected={isDbConfigured()} />
+        </div>
+      </section>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <StatCard label="Toplam ilan" value={stats.total} />
@@ -102,6 +141,18 @@ export default async function AdminDashboardPage() {
       <section className="rounded-lg border border-border bg-white p-4">
         <h2 className="text-sm font-bold">Sistem durumu</h2>
         <dl className="mt-3 grid gap-2 text-[13px] sm:grid-cols-2">
+          <div className="flex justify-between">
+            <dt className="text-muted">Reklam alanları</dt>
+            <dd>{config.adsEnabled ? "Açık" : "Kapalı"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">İlan verme</dt>
+            <dd>{config.listingSubmissionEnabled !== false ? "Açık" : "Kapalı"}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Ücretli ilan</dt>
+            <dd>{config.listingPricing.enabled ? "Açık" : "Kapalı"}</dd>
+          </div>
           <div className="flex justify-between">
             <dt className="text-muted">Ücretsiz dönem</dt>
             <dd>{config.listingPricing.freePeriod ? "Aktif" : "Kapalı"}</dd>

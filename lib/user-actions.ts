@@ -6,9 +6,10 @@ import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
-import { createListingInquiry } from "@/lib/listing-inquiries-store";
+import { createListingInquiry, reportListingInquiry } from "@/lib/listing-inquiries-store";
 import { createOffer, getUserOfferForListing } from "@/lib/offers-store";
 import { getListingBySlug } from "@/lib/listings-store";
+import { logActivity } from "@/lib/admin/activity";
 import {
   createUser,
   getUserByEmail,
@@ -122,19 +123,19 @@ export async function submitListingInquiryAction(
   const message = String(formData.get("message") || "").trim();
 
   const session = await getUserSession();
-  const senderName = session.isLoggedIn
-    ? session.name
-    : String(formData.get("senderName") || "").trim();
-  const senderEmail = session.isLoggedIn
-    ? session.email
-    : String(formData.get("senderEmail") || "").trim().toLowerCase();
+  if (!session.isLoggedIn || !session.userId) {
+    const dest = listingSlug
+      ? `/giris?redirect=${encodeURIComponent(`/tekne/ilan/${listingSlug}`)}`
+      : "/giris";
+    redirect(dest);
+  }
+
+  const senderName = session.name;
+  const senderEmail = session.email;
   const senderPhone = String(formData.get("senderPhone") || "").trim();
 
   if (!listingId || !message) {
     return { ok: false, message: "", error: "Mesajınızı yazın." };
-  }
-  if (!senderName || !senderEmail) {
-    return { ok: false, message: "", error: "Ad ve e-posta zorunludur." };
   }
 
   if (!isDbConfigured()) {
@@ -152,7 +153,7 @@ export async function submitListingInquiryAction(
   await createListingInquiry({
     listingId,
     listingTitle: listingTitle || listing.title,
-    senderUserId: session.isLoggedIn ? session.userId : undefined,
+    senderUserId: session.userId,
     senderName,
     senderEmail,
     senderPhone: senderPhone || undefined,
@@ -165,6 +166,48 @@ export async function submitListingInquiryAction(
   return {
     ok: true,
     message: "Mesajınız iletildi. İlan veren sizinle iletişime geçebilir.",
+    error: "",
+  };
+}
+
+export async function reportListingInquiryAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const inquiryId = Number(formData.get("inquiryId"));
+  const reason = String(formData.get("reason") || "").trim();
+
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    redirect("/giris?redirect=/mesajlar");
+  }
+
+  if (!inquiryId) {
+    return { ok: false, message: "", error: "Geçersiz mesaj." };
+  }
+  if (reason.length < 10) {
+    return { ok: false, message: "", error: "Şikayet gerekçenizi en az 10 karakter yazın." };
+  }
+
+  const result = await reportListingInquiry(inquiryId, session.userId, session.email, reason);
+  if (!result.ok) {
+    return { ok: false, message: "", error: result.error };
+  }
+
+  await logActivity({
+    action: "report_listing_inquiry",
+    entityType: "listing_inquiry",
+    entityId: inquiryId,
+    adminEmail: session.email,
+    details: { reason },
+  });
+
+  revalidatePath("/mesajlar");
+  revalidatePath("/admin/mesajlar");
+
+  return {
+    ok: true,
+    message: "Şikayetiniz yönetime iletildi. En kısa sürede incelenecektir.",
     error: "",
   };
 }

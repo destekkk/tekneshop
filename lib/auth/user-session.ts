@@ -40,12 +40,14 @@ export async function getCurrentUser() {
   };
 }
 
-export async function requireUser(redirectTo?: string) {
+export type CurrentUser = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+
+export async function requireUser(redirectTo?: string): Promise<CurrentUser> {
   const { redirect } = await import("next/navigation");
   const user = await getCurrentUser();
   if (!user) {
     const dest = redirectTo ? `/giris?redirect=${encodeURIComponent(redirectTo)}` : "/giris";
     redirect(dest);
   }
-  return user;
+  return user!;
 }

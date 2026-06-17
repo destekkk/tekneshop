@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 const legacyMap: Record<string, string> = {
   "motor-yakit": "/magaza/motor-aksami/motor-yagi",
   guvenlik: "/magaza/tekne-malzemeleri/guvenlik",
-  navigasyon: "/magaza/elektronik/chartplotter",
+  navigasyon: "/magaza/elektronik/balik-bulucular",
   bakim: "/magaza/boya-bakim/temizlik-kimyasal",
   konfor: "/magaza/elektrik",
   pervane: "/magaza/motor-aksami/pervane",

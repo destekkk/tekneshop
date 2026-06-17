@@ -2,16 +2,12 @@ import Link from "next/link";
 import BoatCard from "@/components/BoatCard";
 import CsyProductCard from "@/components/CsyProductCard";
 import ListingWithAds from "@/components/ListingWithAds";
+import TekneCategoryLinks from "@/components/TekneCategoryLinks";
 import { csyProducts } from "@/lib/csy-products";
 import { getApprovedBoatListings } from "@/lib/listings-store";
-import { getMenuSections } from "@/lib/navigation";
 
 export default async function HomePage() {
-  const [menuSections, boatListings] = await Promise.all([
-    getMenuSections(),
-    getApprovedBoatListings(),
-  ]);
-  const tekneSection = menuSections[0];
+  const boatListings = await getApprovedBoatListings();
 
   return (
     <main>
@@ -22,19 +18,9 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <section className="border-b border-border px-4 py-4">
-        <h2 className="mb-3 text-[13px] font-bold text-navy">{tekneSection.label}</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {tekneSection.children.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded border border-border bg-[#fafafa] px-3 py-2.5 text-[13px] text-link hover:bg-[#f0f0f0] hover:underline"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
+      <section className="border-b border-border px-4 py-3">
+        <h2 className="mb-2 text-[12px] font-bold text-navy">Tekne İlanları</h2>
+        <TekneCategoryLinks />
       </section>
 
       <section>
@@ -54,7 +40,7 @@ export default async function HomePage() {
 
       <section>
         <div className="flex items-center justify-between border-b border-border bg-[#fafafa] px-4 py-2">
-          <h2 className="text-[13px] font-bold">CSY Marine — Sezon ürünleri</h2>
+          <h2 className="text-[13px] font-bold">Sezon ürünleri</h2>
           <Link href="/magaza" className="text-[12px] link-classified hover:underline">
             Tümünü göster
           </Link>
