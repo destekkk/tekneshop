@@ -30,10 +30,17 @@ export function collectListingImageFiles(formData: FormData): File[] {
   return files.slice(0, MAX_FILES);
 }
 
+function canUseVercelBlob() {
+  return Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+      (isServerlessEnv() && process.env.BLOB_STORE_ID),
+  );
+}
+
 export async function uploadListingImages(files: File[], slug: string): Promise<string[]> {
   if (files.length === 0) return [];
 
-  const useBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const useBlob = canUseVercelBlob();
   if (!useBlob && isServerlessEnv()) {
     throw new Error(
       "Fotoğraf yükleme canlıda henüz yapılandırılmadı. İlanı fotoğrafsız gönderebilir veya yönetici Vercel Blob ayarını tamamlayana kadar bekleyebilirsiniz.",
