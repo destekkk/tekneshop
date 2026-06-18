@@ -1,4 +1,4 @@
-import { count, desc, eq, sql } from "drizzle-orm";
+import { count, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { listingInquiries, listings, type ListingInquiry } from "@/lib/db/schema";
 
@@ -169,9 +169,9 @@ export async function markListingInquiriesReadForOwner(ownerEmail: string) {
       .where(
         sql`LOWER(${listings.contactEmail}) = ${email} AND ${listingInquiries.read} = false`,
       );
-    for (const row of unread) {
-      await markListingInquiryRead(row.id);
-    }
+    const ids = unread.map((row) => row.id);
+    if (ids.length === 0) return;
+    await db.update(listingInquiries).set({ read: true }).where(inArray(listingInquiries.id, ids));
   } catch {
     // ignore
   }

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import ListingPageHeader from "@/components/ListingPageHeader";
+import MesajlarReadMarker from "@/components/MesajlarReadMarker";
 import SellerInquiriesManager from "@/components/SellerInquiriesManager";
 import { requireUser } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
-import { getListingInquiriesForOwner, markListingInquiriesReadForOwner } from "@/lib/listing-inquiries-store";
+import { getListingInquiriesForOwner } from "@/lib/listing-inquiries-store";
 
 export const metadata = { title: "İlan Mesajlarım | TekneShop" };
 
@@ -12,16 +12,13 @@ export default async function MesajlarPage() {
   const user = await requireUser("/mesajlar");
   const inquiries = isDbConfigured() ? await getListingInquiriesForOwner(user.email) : [];
 
-  if (isDbConfigured()) {
-    await markListingInquiriesReadForOwner(user.email);
-    revalidatePath("/", "layout");
-  }
-
   return (
     <>
+      <MesajlarReadMarker />
       <ListingPageHeader
         title="İlan Mesajlarım"
         count={inquiries.length}
+        countLabel="mesaj"
         crumbs={[
           { label: "Ana Sayfa", href: "/" },
           { label: "İlan Mesajlarım" },
@@ -40,8 +37,8 @@ export default async function MesajlarPage() {
           <SellerInquiriesManager inquiries={inquiries} />
         )}
         <p className="mt-6">
-          <Link href="/ilan-ver" className="text-[13px] text-navy hover:underline">
-            ← İlan ver
+          <Link href="/tekne" className="text-[13px] text-navy hover:underline">
+            ← Tekne ilanları
           </Link>
         </p>
       </div>

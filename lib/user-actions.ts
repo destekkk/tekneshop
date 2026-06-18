@@ -6,7 +6,11 @@ import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
-import { createListingInquiry, reportListingInquiry } from "@/lib/listing-inquiries-store";
+import {
+  createListingInquiry,
+  markListingInquiriesReadForOwner,
+  reportListingInquiry,
+} from "@/lib/listing-inquiries-store";
 import {
   addListingFavorite,
   addProductFavorite,
@@ -359,4 +363,13 @@ export async function removeFavoriteAction(
   revalidatePath("/favorilerim");
 
   return { ok: true, message: "Favorilerden kaldırıldı.", error: "" };
+}
+
+export async function markMesajlarReadAction() {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) return;
+  if (!isDbConfigured()) return;
+
+  await markListingInquiriesReadForOwner(session.email);
+  revalidatePath("/", "layout");
 }

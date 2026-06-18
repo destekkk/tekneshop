@@ -41,7 +41,7 @@ export default function Header() {
           </button>
         </form>
 
-        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
           <Suspense fallback={<span className="h-10 w-32 animate-pulse rounded bg-[#eee]" />}>
             <HeaderAuth />
           </Suspense>

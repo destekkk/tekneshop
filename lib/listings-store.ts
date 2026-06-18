@@ -90,23 +90,35 @@ export async function getListingById(id: number) {
 }
 
 export async function getBoatBySlug(slug: string): Promise<BoatListing | undefined> {
+  const detail = await getApprovedBoatDetail(slug);
+  return detail?.boat;
+}
+
+export async function getApprovedBoatDetail(
+  slug: string,
+): Promise<{ boat: BoatListing; listing: Listing | null } | undefined> {
   if (!isDbConfigured()) {
     const idx = boatListings.findIndex((b) => b.slug === slug);
-    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
+    if (idx < 0) return undefined;
+    return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
   }
   try {
     const db = getDb();
-    const rows = await db
+    const [row] = await db
       .select()
       .from(listings)
-      .where(and(eq(listings.slug, slug), eq(listings.type, "boat"), eq(listings.status, "approved")))
+      .where(
+        and(eq(listings.slug, slug), eq(listings.type, "boat"), eq(listings.status, "approved")),
+      )
       .limit(1);
-    if (rows[0]) return dbToBoat(rows[0]);
+    if (row) return { boat: dbToBoat(row), listing: row };
     const idx = boatListings.findIndex((b) => b.slug === slug);
-    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
+    if (idx >= 0) return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+    return undefined;
   } catch {
     const idx = boatListings.findIndex((b) => b.slug === slug);
-    return idx >= 0 ? staticBoatWithNumber(boatListings[idx], idx) : undefined;
+    if (idx >= 0) return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+    return undefined;
   }
 }
 

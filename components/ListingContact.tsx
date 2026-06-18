@@ -65,11 +65,18 @@ export default function ListingContact({
   }
 
   return (
-    <ListingMessageForm
-      listingId={listing.id}
-      listingSlug={listingSlug}
-      listingTitle={listingTitle}
-      user={user}
-    />
+    <div className="space-y-3">
+      {listing.contactName ? (
+        <p className="text-[13px] text-muted">
+          İlan veren: <span className="font-semibold text-foreground">{listing.contactName}</span>
+        </p>
+      ) : null}
+      <ListingMessageForm
+        listingId={listing.id}
+        listingSlug={listingSlug}
+        listingTitle={listingTitle}
+        user={user}
+      />
+    </div>
   );
 }

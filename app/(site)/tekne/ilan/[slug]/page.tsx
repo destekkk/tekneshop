@@ -5,7 +5,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import ListingImageGallery from "@/components/ListingImageGallery";
 import ListingContact from "@/components/ListingContact";
 import OfferForm from "@/components/OfferForm";
-import WhatsAppLink from "@/components/WhatsAppLink";
+import StaticListingContactFallback from "@/components/StaticListingContactFallback";
 import { getCurrentUser } from "@/lib/auth/user-session";
 import { getSiteConfig } from "@/lib/admin/settings";
 import { getSiteUrl } from "@/lib/email/config";
@@ -18,7 +18,7 @@ import {
 import { formatListingNumber } from "@/lib/listing-number";
 import { parseListingCurrency } from "@/lib/listing-currency";
 import { getUserOfferForListing } from "@/lib/offers-store";
-import { getBoatBySlug, getListingBySlug } from "@/lib/listings-store";
+import { getApprovedBoatDetail } from "@/lib/listings-store";
 import { isDbConfigured } from "@/lib/db";
 import { isListingFavorited } from "@/lib/favorites-store";
 
@@ -30,19 +30,19 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const boat = await getBoatBySlug(slug);
-  return { title: boat ? `${boat.title} | TekneShop` : "İlan" };
+  const detail = await getApprovedBoatDetail(slug);
+  return { title: detail ? `${detail.boat.title} | TekneShop` : "İlan" };
 }
 
 export default async function BoatDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [boat, config, listing, user] = await Promise.all([
-    getBoatBySlug(slug),
+  const [detail, config, user] = await Promise.all([
+    getApprovedBoatDetail(slug),
     getSiteConfig(),
-    getListingBySlug(slug),
     getCurrentUser(),
   ]);
-  if (!boat) notFound();
+  if (!detail) notFound();
+  const { boat, listing } = detail;
   const listingUrl = `${getSiteUrl()}/tekne/ilan/${slug}`;
   const conditionText = listing?.condition
     ? conditionLabel(listing.condition)
@@ -142,7 +142,7 @@ export default async function BoatDetailPage({ params }: Props) {
             </tbody>
           </table>
           <div className="mt-8 flex w-full max-w-lg flex-col items-start gap-4">
-            {listing && listing.status === "approved" ? (
+            {listing ? (
               <>
                 <ListingContact
                   listing={listing}
@@ -163,21 +163,12 @@ export default async function BoatDetailPage({ params }: Props) {
                 />
               </>
             ) : (
-              <div className="flex flex-wrap gap-3">
-                {config.whatsappNumber ? (
-                  <WhatsAppLink
-                    number={config.whatsappNumber}
-                    siteName={config.siteName}
-                    prefillMessage={config.whatsappPrefillMessage || undefined}
-                    context="listing"
-                    listingTitle={boat.title}
-                    listingUrl={listingUrl}
-                    listingNumber={boat.listingNumber}
-                    variant="button"
-                    label={`${config.siteName} üzerinden sor`}
-                  />
-                ) : null}
-              </div>
+              <StaticListingContactFallback
+                config={config}
+                listingTitle={boat.title}
+                listingUrl={listingUrl}
+                listingNumber={boat.listingNumber}
+              />
             )}
           </div>
           <p className="mt-4">
