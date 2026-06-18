@@ -10,7 +10,8 @@ import {
 export type OwnerListingInquiry = ListingInquiry & {
   listingSlug: string | null;
   canSellerReply?: boolean;
-  latestMessage?: string;
+  latestBuyerMessage?: string;
+  latestSellerMessage?: string | null;
 };
 
 export type InquiryTimelineEntry = {
@@ -79,6 +80,10 @@ function conversationFromTimeline(
     waitingForSeller: !canBuyerReply,
     lastSellerMessage: lastSeller?.body ?? null,
   };
+}
+
+function lastMessageByRole(timeline: InquiryTimelineEntry[], role: "buyer" | "seller") {
+  return [...timeline].reverse().find((m) => m.role === role)?.body ?? null;
 }
 
 export async function getInquiryByListingAndSender(
@@ -256,7 +261,8 @@ export async function getListingInquiriesForOwner(ownerEmail: string) {
         ...r.inquiry,
         listingSlug: r.listingSlug,
         canSellerReply,
-        latestMessage: timeline[timeline.length - 1]?.body ?? r.inquiry.message,
+        latestBuyerMessage: lastMessageByRole(timeline, "buyer") ?? r.inquiry.message,
+        latestSellerMessage: lastMessageByRole(timeline, "seller"),
       });
     }
     return result;

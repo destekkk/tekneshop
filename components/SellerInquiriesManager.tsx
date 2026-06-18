@@ -165,9 +165,18 @@ export default function SellerInquiriesManager({
                   </>
                 ) : null}
               </p>
-              <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-foreground">
-                {m.latestMessage ?? m.message}
-              </p>
+              <div className="mt-0.5 space-y-1">
+                <p className="line-clamp-2 text-[12px] leading-snug text-foreground">
+                  <span className="font-medium text-muted">Gelen: </span>
+                  {m.latestBuyerMessage ?? m.message}
+                </p>
+                {m.latestSellerMessage ? (
+                  <p className="line-clamp-2 text-[12px] leading-snug text-sky-900">
+                    <span className="font-medium text-sky-800">Yanıtınız: </span>
+                    {m.latestSellerMessage}
+                  </p>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
