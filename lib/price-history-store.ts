@@ -122,9 +122,13 @@ export async function getUnreadPriceAlertCount(userId: number) {
 
 export async function markUserPriceAlertsRead(userId: number) {
   if (!isDbConfigured()) return;
-  const db = getDb();
-  await db
-    .update(favoritePriceAlerts)
-    .set({ read: true })
-    .where(and(eq(favoritePriceAlerts.userId, userId), eq(favoritePriceAlerts.read, false)));
+  try {
+    const db = getDb();
+    await db
+      .update(favoritePriceAlerts)
+      .set({ read: true })
+      .where(and(eq(favoritePriceAlerts.userId, userId), eq(favoritePriceAlerts.read, false)));
+  } catch {
+    // tablo/şema eksikse sayfa yine açılsın
+  }
 }

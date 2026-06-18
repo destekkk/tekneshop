@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import type { FormFieldValues } from "@/lib/form-preserve";
 import { fieldValue } from "@/lib/form-preserve";
+import BrandModelInputs from "@/components/BrandModelInputs";
 import {
   boatTypeFormOptions,
   brandFormOptions,
+  buildTextSuggestions,
   conditionFormOptions,
   modelFormOptions,
   OTHER_VALUE,
+  storedBrandModelText,
 } from "@/lib/boat-form-options";
+import { useState } from "react";
 
 function SelectWithOther({
   label,
@@ -60,7 +63,18 @@ function SelectWithOther({
   );
 }
 
-export default function BoatListingFields({ initialValues = {} }: { initialValues?: FormFieldValues }) {
+export default function BoatListingFields({
+  initialValues = {},
+  brandSuggestionsFromDb = [],
+  modelSuggestionsFromDb = [],
+}: {
+  initialValues?: FormFieldValues;
+  brandSuggestionsFromDb?: string[];
+  modelSuggestionsFromDb?: string[];
+}) {
+  const brandSuggestions = buildTextSuggestions(brandFormOptions, brandSuggestionsFromDb);
+  const modelSuggestions = buildTextSuggestions(modelFormOptions, modelSuggestionsFromDb);
+
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -82,24 +96,24 @@ export default function BoatListingFields({ initialValues = {} }: { initialValue
           initialOther={fieldValue(initialValues, "boatTypeOther")}
         />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectWithOther
-          label="Marka"
-          name="brand"
-          otherName="brandOther"
-          options={brandFormOptions}
-          initialSelected={fieldValue(initialValues, "brand")}
-          initialOther={fieldValue(initialValues, "brandOther")}
-        />
-        <SelectWithOther
-          label="Model"
-          name="model"
-          otherName="modelOther"
-          options={modelFormOptions}
-          initialSelected={fieldValue(initialValues, "model")}
-          initialOther={fieldValue(initialValues, "modelOther")}
-        />
-      </div>
+      <BrandModelInputs
+        brandSuggestions={brandSuggestions}
+        modelSuggestions={modelSuggestions}
+        brandValue={initialBrandModelText(initialValues, "brand", brandFormOptions)}
+        modelValue={initialBrandModelText(initialValues, "model", modelFormOptions)}
+      />
     </div>
   );
+}
+
+function initialBrandModelText(
+  values: FormFieldValues,
+  field: "brand" | "model",
+  options: { value: string; label: string }[],
+) {
+  const otherField = field === "brand" ? "brandOther" : "modelOther";
+  const raw = fieldValue(values, field);
+  if (raw === OTHER_VALUE) return fieldValue(values, otherField);
+  if (raw) return storedBrandModelText(raw, options) || raw;
+  return fieldValue(values, otherField);
 }

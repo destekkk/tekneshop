@@ -8,7 +8,7 @@ import { submitListingInquiryAction } from "@/lib/user-actions";
 const initial = { ok: false, message: "", error: "" };
 
 const boxClass =
-  "w-full max-w-lg rounded-lg border-2 border-navy/25 bg-[#f0f9f8] p-5 shadow-sm";
+  "w-full rounded-lg border-2 border-navy/25 bg-[#f0f9f8] p-4 shadow-sm";
 
 export default function ListingMessageForm({
   listingId,

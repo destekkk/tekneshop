@@ -20,7 +20,7 @@ export default function StaticListingContactFallback({
   const hasEmail = Boolean(config.supportEmail);
 
   return (
-    <div className="w-full max-w-lg rounded-lg border border-border bg-white p-4">
+    <div className="w-full rounded-lg border border-border bg-white p-4">
       <p className="text-[13px] font-semibold text-navy">İletişim</p>
       <p className="mt-1 text-[13px] text-muted">
         Bu vitrin ilanı için doğrudan mesaj gönderilemiyor. TekneShop üzerinden iletişime geçin.
@@ -55,7 +55,7 @@ export default function StaticListingContactFallback({
             label={`${config.siteName} üzerinden sor`}
           />
         ) : null}
-        <Link href="/iletisim" className="btn-navy inline-flex rounded-sm px-5 py-2.5 text-[13px] font-bold">
+        <Link href="/iletisim" className="btn-navy inline-flex w-auto rounded-sm px-4 py-2 text-[13px] font-bold">
           İletişim sayfası
         </Link>
       </div>

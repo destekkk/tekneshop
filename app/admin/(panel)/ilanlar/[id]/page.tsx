@@ -7,7 +7,7 @@ import ListingNoteForm from "@/components/admin/ListingNoteForm";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { isDbConfigured } from "@/lib/db";
 import { formatListingNumber } from "@/lib/listing-number";
-import { getListingById } from "@/lib/listings-store";
+import { getListingBrandModelSuggestions, getListingById } from "@/lib/listings-store";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -26,6 +26,8 @@ export default async function AdminListingDetailPage({ params }: Props) {
 
   const listing = await getListingById(listingId);
   if (!listing) notFound();
+
+  const suggestions = await getListingBrandModelSuggestions();
 
   const backHref =
     listing.status === "pending"
@@ -75,7 +77,11 @@ export default async function AdminListingDetailPage({ params }: Props) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <AdminListingPreview listing={listing} />
-        <AdminListingEditForm listing={listing} />
+        <AdminListingEditForm
+          listing={listing}
+          brandSuggestionsFromDb={suggestions.brands}
+          modelSuggestionsFromDb={suggestions.models}
+        />
       </div>
 
       <ListingNoteForm id={listing.id} notes={listing.adminNotes} />

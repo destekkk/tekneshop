@@ -373,3 +373,13 @@ export async function markMesajlarReadAction() {
   await markListingInquiriesReadForOwner(session.email);
   revalidatePath("/", "layout");
 }
+
+export async function markFavorilerimReadAction() {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) return;
+  if (!isDbConfigured()) return;
+
+  const { markUserPriceAlertsRead } = await import("@/lib/price-history-store");
+  await markUserPriceAlertsRead(session.userId);
+  revalidatePath("/", "layout");
+}

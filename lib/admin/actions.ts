@@ -43,11 +43,10 @@ import {
 import { collectListingImageFiles, uploadListingImages } from "@/lib/listing-images";
 import { parseListingPriceFromForm } from "@/lib/listing-currency";
 import {
-  brandFormOptions,
-  modelFormOptions,
   resolveBoatTypeStorage,
+  resolveBrandField,
   resolveConditionStorage,
-  resolveSelectWithOther,
+  resolveModelField,
 } from "@/lib/boat-form-options";
 import { isValidTcKimlikNo } from "@/lib/auth/tc";
 import {
@@ -229,10 +228,8 @@ export async function updateListingAction(
     description: String(formData.get("description") || "") || null,
     condition: resolveConditionStorage(formData),
     boatType: resolveBoatTypeStorage(formData),
-    brand:
-      resolveSelectWithOther(formData, "brand", "brandOther", brandFormOptions) || null,
-    model:
-      resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || null,
+    brand: resolveBrandField(formData) || null,
+    model: resolveModelField(formData) || null,
     price: priceResult.price,
     currency: priceResult.currency,
     year: Number(formData.get("year") || 2026),
@@ -514,10 +511,8 @@ export async function submitPublicListingAction(formData: FormData) {
     status: config.moderationRequired ? ("pending" as const) : ("approved" as const),
     condition: resolveConditionStorage(formData),
     boatType: resolveBoatTypeStorage(formData),
-    brand:
-      resolveSelectWithOther(formData, "brand", "brandOther", brandFormOptions) || undefined,
-    model:
-      resolveSelectWithOther(formData, "model", "modelOther", modelFormOptions) || undefined,
+    brand: resolveBrandField(formData) || undefined,
+    model: resolveModelField(formData) || undefined,
     price: priceResult.price,
     currency: priceResult.currency,
     year: Number(formData.get("year") || 2026),

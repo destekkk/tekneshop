@@ -14,8 +14,12 @@ const yearOptions = Array.from({ length: DEFAULT_YEAR - YEAR_MIN + 1 }, (_, i) =
 
 export default function IlanVerForm({
   user,
+  brandSuggestionsFromDb = [],
+  modelSuggestionsFromDb = [],
 }: {
   user: { name: string; email: string; phone?: string | null };
+  brandSuggestionsFromDb?: string[];
+  modelSuggestionsFromDb?: string[];
 }) {
   const [state, dispatch, pending] = useActionState(submitListingFormAction, initial);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -73,7 +77,11 @@ export default function IlanVerForm({
           className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </div>
-      <BoatListingFields initialValues={values} />
+      <BoatListingFields
+        initialValues={values}
+        brandSuggestionsFromDb={brandSuggestionsFromDb}
+        modelSuggestionsFromDb={modelSuggestionsFromDb}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium">Fiyat *</label>

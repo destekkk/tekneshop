@@ -1,15 +1,18 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import BrandModelInputs from "@/components/BrandModelInputs";
 import ListingImageUpload from "@/components/ListingImageUpload";
 import { updateListingAction } from "@/lib/admin/actions";
 import { fieldValue, preserveFormKey } from "@/lib/form-preserve";
 import {
   boatTypeFormOptions,
   brandFormOptions,
+  buildTextSuggestions,
   conditionFormOptions,
   modelFormOptions,
   OTHER_VALUE,
+  storedBrandModelText,
 } from "@/lib/boat-form-options";
 import type { Listing } from "@/lib/db/schema";
 import {
@@ -45,7 +48,15 @@ function storedOtherText(
 
 const fieldClass = "mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm";
 
-export default function AdminListingEditForm({ listing }: { listing: Listing }) {
+export default function AdminListingEditForm({
+  listing,
+  brandSuggestionsFromDb = [],
+  modelSuggestionsFromDb = [],
+}: {
+  listing: Listing;
+  brandSuggestionsFromDb?: string[];
+  modelSuggestionsFromDb?: string[];
+}) {
   const [state, dispatch, pending] = useActionState(updateListingAction, initial);
   const [values, setValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -59,8 +70,9 @@ export default function AdminListingEditForm({ listing }: { listing: Listing }) 
   const [boatType, setBoatType] = useState(() =>
     storedToSelect(listing.boatType, boatTypeFormOptions),
   );
-  const [brand, setBrand] = useState(() => storedToSelect(listing.brand, brandFormOptions));
-  const [model, setModel] = useState(() => storedToSelect(listing.model, modelFormOptions));
+
+  const brandSuggestions = buildTextSuggestions(brandFormOptions, brandSuggestionsFromDb);
+  const modelSuggestions = buildTextSuggestions(modelFormOptions, modelSuggestionsFromDb);
 
   function handleSubmit(formData: FormData) {
     const snapshot: Record<string, string> = {};
@@ -162,56 +174,13 @@ export default function AdminListingEditForm({ listing }: { listing: Listing }) 
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="text-sm font-medium">Marka</label>
-          <select
-            name="brand"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className={fieldClass}
-          >
-            <option value="">Seçin</option>
-            {brandFormOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {brand === OTHER_VALUE ? (
-            <input
-              name="brandOther"
-              defaultValue={v("brandOther", storedOtherText(listing.brand, brandFormOptions))}
-              placeholder="Lütfen belirtin"
-              className={`${fieldClass} mt-2`}
-            />
-          ) : null}
-        </div>
-        <div>
-          <label className="text-sm font-medium">Model</label>
-          <select
-            name="model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className={fieldClass}
-          >
-            <option value="">Seçin</option>
-            {modelFormOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {model === OTHER_VALUE ? (
-            <input
-              name="modelOther"
-              defaultValue={v("modelOther", storedOtherText(listing.model, modelFormOptions))}
-              placeholder="Lütfen belirtin"
-              className={`${fieldClass} mt-2`}
-            />
-          ) : null}
-        </div>
-      </div>
+      <BrandModelInputs
+        brandSuggestions={brandSuggestions}
+        modelSuggestions={modelSuggestions}
+        brandValue={v("brand", storedBrandModelText(listing.brand, brandFormOptions))}
+        modelValue={v("model", storedBrandModelText(listing.model, modelFormOptions))}
+        fieldClass={fieldClass}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>

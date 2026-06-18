@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNotNull, or } from "drizzle-orm";
 import type { ListingSortKey } from "@/lib/listing-filters";
 import { filterListingsByTryPrice } from "@/lib/listing-filters";
 import {
@@ -51,6 +51,93 @@ async function fetchApprovedBoatListingRow(slug: string) {
     )
     .limit(1);
   return row || null;
+}
+
+async function fetchApprovedListingBySlug(slug: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(listings)
+    .where(and(eq(listings.slug, slug), eq(listings.status, "approved")))
+    .limit(1);
+  return row || null;
+}
+
+function staticListingInsertValues(
+  boat: BoatListing,
+  index: number,
+  supportEmail: string,
+  listingNumber: number,
+) {
+  return {
+    listingNumber,
+    slug: boat.slug,
+    type: "boat" as const,
+    title: boat.title,
+    status: "approved" as const,
+    condition: boat.condition,
+    boatType: boat.boatType,
+    price: boat.price,
+    currency: boat.currency || "TRY",
+    year: boat.year,
+    lengthM: String(boat.lengthM),
+    location: boat.location,
+    engine: boat.engine,
+    badge: boat.badge,
+    image: boat.image,
+    isFeatured: boat.badge === "Vitrin",
+    showContactPhone: false,
+    contactName: "TekneShop Vitrin",
+    contactEmail: supportEmail,
+    approvedAt: new Date(),
+    source: "seed",
+  };
+}
+
+async function resolveSupportEmail() {
+  try {
+    const config = await getSiteConfig();
+    return config.supportEmail || defaultSiteConfig.supportEmail;
+  } catch {
+    return defaultSiteConfig.supportEmail;
+  }
+}
+
+async function upsertStaticListingForSlug(slug: string): Promise<Listing | null> {
+  if (!isDbConfigured()) return null;
+  const idx = boatListings.findIndex((b) => b.slug === slug);
+  if (idx < 0) return null;
+
+  const boat = boatListings[idx];
+  const supportEmail = await resolveSupportEmail();
+  const db = getDb();
+
+  let listingNumber = demoListingNumber(idx + 1);
+  try {
+    listingNumber = await generateUniqueListingNumber();
+  } catch {
+    listingNumber = randomListingNumberCandidate();
+  }
+
+  const values = staticListingInsertValues(boat, idx, supportEmail, listingNumber);
+
+  await db
+    .insert(listings)
+    .values(values)
+    .onConflictDoUpdate({
+      target: listings.slug,
+      set: {
+        status: "approved",
+        type: "boat",
+        showContactPhone: false,
+        contactName: "TekneShop Vitrin",
+        contactEmail: supportEmail,
+        source: "seed",
+        updatedAt: new Date(),
+      },
+    });
+
+  return (await fetchApprovedBoatListingRow(slug)) || (await fetchApprovedListingBySlug(slug));
 }
 
 function staticBoatWithNumber(boat: BoatListing, index: number): BoatListing {
@@ -135,29 +222,40 @@ export async function getApprovedBoatDetail(
     if (idx < 0) return undefined;
     return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
   }
+
   try {
-    let row = await fetchApprovedBoatListingRow(slug);
+    await ensureStaticListingsSeeded();
+
+    let row: Listing | null =
+      (await fetchApprovedBoatListingRow(slug)) || (await fetchApprovedListingBySlug(slug));
+
     if (!row) {
-      const idx = boatListings.findIndex((b) => b.slug === slug);
-      if (idx >= 0) {
-        await ensureStaticListingsSeeded();
-        row = await fetchApprovedBoatListingRow(slug);
-        if (row) return { boat: dbToBoat(row), listing: row };
-        return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
-      }
-      return undefined;
+      row = await upsertStaticListingForSlug(slug);
     }
-    return { boat: dbToBoat(row), listing: row };
-  } catch {
+
+    if (row) {
+      return { boat: dbToBoat(row), listing: row };
+    }
+
     const idx = boatListings.findIndex((b) => b.slug === slug);
     if (idx >= 0) {
-      try {
-        await ensureStaticListingsSeeded();
-        const row = await fetchApprovedBoatListingRow(slug);
-        if (row) return { boat: dbToBoat(row), listing: row };
-      } catch {
-        // fall through
-      }
+      return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+    }
+
+    return undefined;
+  } catch {
+    try {
+      const row =
+        (await fetchApprovedBoatListingRow(slug)) ||
+        (await fetchApprovedListingBySlug(slug)) ||
+        (await upsertStaticListingForSlug(slug));
+      if (row) return { boat: dbToBoat(row), listing: row };
+    } catch {
+      // fall through
+    }
+
+    const idx = boatListings.findIndex((b) => b.slug === slug);
+    if (idx >= 0) {
       return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
     }
     return undefined;
@@ -518,57 +616,68 @@ export async function getAllListingsForExport() {
 
 export async function seedListingsFromStatic() {
   const db = getDb();
-  let supportEmail = defaultSiteConfig.supportEmail;
-  try {
-    const config = await getSiteConfig();
-    supportEmail = config.supportEmail || supportEmail;
-  } catch {
-    // use default
-  }
+  const supportEmail = await resolveSupportEmail();
 
-  for (const boat of boatListings) {
+  for (const [index, boat] of boatListings.entries()) {
     let listingNumber: number;
     try {
       listingNumber = await generateUniqueListingNumber();
     } catch {
       listingNumber = randomListingNumberCandidate();
     }
+    const values = staticListingInsertValues(boat, index, supportEmail, listingNumber);
     await db
       .insert(listings)
-      .values({
-        listingNumber,
-        slug: boat.slug,
-        type: "boat",
-        title: boat.title,
-        status: "approved",
-        condition: boat.condition,
-        boatType: boat.boatType,
-        price: boat.price,
-        currency: boat.currency || "TRY",
-        year: boat.year,
-        lengthM: String(boat.lengthM),
-        location: boat.location,
-        engine: boat.engine,
-        badge: boat.badge,
-        image: boat.image,
-        isFeatured: boat.badge === "Vitrin",
-        showContactPhone: false,
-        contactName: "TekneShop Vitrin",
-        contactEmail: supportEmail,
-        approvedAt: new Date(),
-        source: "seed",
-      })
-      .onConflictDoNothing({ target: listings.slug });
+      .values(values)
+      .onConflictDoUpdate({
+        target: listings.slug,
+        set: {
+          status: "approved",
+          type: "boat",
+          showContactPhone: false,
+          contactName: "TekneShop Vitrin",
+          contactEmail: supportEmail,
+          source: "seed",
+          updatedAt: new Date(),
+        },
+      });
   }
+}
 
-  await db
-    .update(listings)
-    .set({
-      showContactPhone: false,
-      contactName: "TekneShop Vitrin",
-      contactEmail: supportEmail,
-    })
-    .where(and(eq(listings.source, "seed"), eq(listings.status, "approved")));
+export async function getListingBrandModelSuggestions() {
+  if (!isDbConfigured()) return { brands: [] as string[], models: [] as string[] };
+  try {
+    const db = getDb();
+    const [brandRows, modelRows] = await Promise.all([
+      db
+        .select({ brand: listings.brand })
+        .from(listings)
+        .where(isNotNull(listings.brand)),
+      db
+        .select({ model: listings.model })
+        .from(listings)
+        .where(isNotNull(listings.model)),
+    ]);
+
+    const brands = [
+      ...new Set(
+        brandRows
+          .map((r) => r.brand?.trim())
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ];
+    const models = [
+      ...new Set(
+        modelRows
+          .map((r) => r.model?.trim())
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ];
+
+    return { brands, models };
+  } catch {
+    return { brands: [], models: [] };
+  }
 }
 
 export { boatImagePath };

@@ -36,7 +36,7 @@ export default function OfferForm({
 
   if (!user) {
     return (
-      <div className="w-full max-w-lg rounded-lg border border-border bg-[#fafafa] p-4">
+      <div className="w-full rounded-lg border border-border bg-[#fafafa] p-4">
         <p className="text-[13px] font-semibold text-navy">Teklif ver</p>
         <p className="mt-1 text-[13px] text-muted">
           Bu ilana teklif vermek için giriş yapmanız gerekir.
@@ -53,7 +53,7 @@ export default function OfferForm({
 
   if (existingOffer && existingOffer.status !== "rejected") {
     return (
-      <div className="w-full max-w-lg rounded-lg border border-navy/20 bg-[#f0f9f8] p-4">
+      <div className="w-full rounded-lg border border-navy/20 bg-[#f0f9f8] p-4">
         <p className="text-[13px] font-semibold text-navy">Teklifiniz</p>
         <p className="mt-2 text-[18px] font-bold text-navy">{formatPrice(existingOffer.amount)}</p>
         {existingOffer.message ? (
@@ -70,11 +70,16 @@ export default function OfferForm({
   }
 
   return (
-    <div className="w-full max-w-lg rounded-lg border border-border bg-white p-4">
+    <div className="w-full rounded-lg border border-border bg-white p-4">
       <p className="text-[13px] font-semibold text-navy">Teklif ver</p>
-      <p className="mt-1 text-[12px] text-muted">
+      <p className="mt-1 text-[12px] leading-snug text-muted">
         {listingTitle}
-        {listingPrice ? ` · İlan fiyatı: ${formatPrice(listingPrice)}` : ""}
+        {listingPrice ? (
+          <>
+            <br />
+            <span className="text-[11px]">İlan: {formatPrice(listingPrice)}</span>
+          </>
+        ) : null}
       </p>
 
       {state.message ? (
@@ -107,7 +112,7 @@ export default function OfferForm({
           <label className="text-[12px] font-medium">Not (isteğe bağlı)</label>
           <textarea
             name="message"
-            rows={3}
+            rows={2}
             placeholder="Ödeme koşulu, teslim süresi vb."
             defaultValue={fieldValue(values, "message")}
             className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
@@ -121,7 +126,7 @@ export default function OfferForm({
         <button
           type="submit"
           disabled={pending}
-          className="btn-cta rounded-sm px-6 py-2.5 text-sm font-bold disabled:opacity-50"
+          className="btn-cta w-full rounded-sm px-4 py-2 text-[13px] font-bold disabled:opacity-50"
         >
           {pending ? "Gönderiliyor…" : "Teklif Gönder"}
         </button>

@@ -13,20 +13,17 @@ import {
   boatTypeLabel,
   conditionLabel,
   formatPrice,
-  boatListings,
 } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
 import { parseListingCurrency } from "@/lib/listing-currency";
 import { getUserOfferForListing } from "@/lib/offers-store";
-import { getApprovedBoatDetail } from "@/lib/listings-store";
+import { getApprovedBoatDetail, getListingBySlug } from "@/lib/listings-store";
 import { isDbConfigured } from "@/lib/db";
 import { isListingFavorited } from "@/lib/favorites-store";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  return boatListings.map((b) => ({ slug: b.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -42,7 +39,12 @@ export default async function BoatDetailPage({ params }: Props) {
     getCurrentUser(),
   ]);
   if (!detail) notFound();
-  const { boat, listing } = detail;
+  const { boat } = detail;
+  let listing = detail.listing;
+  if (!listing && isDbConfigured()) {
+    const row = await getListingBySlug(slug);
+    if (row?.status === "approved") listing = row;
+  }
   const listingUrl = `${getSiteUrl()}/tekne/ilan/${slug}`;
   const conditionText = listing?.condition
     ? conditionLabel(listing.condition)
@@ -71,29 +73,67 @@ export default async function BoatDetailPage({ params }: Props) {
           { label: boat.title },
         ]}
       />
-      <div className="flex flex-col gap-6 p-4 lg:flex-row lg:p-6">
-        <div className="max-w-lg lg:w-2/5">
+      <div className="flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:p-6">
+        <div className="flex w-full max-w-lg flex-col gap-4 lg:w-2/5">
           <ListingImageGallery images={galleryImages} alt={boat.title} />
+          {listing ? (
+            <div className="w-full max-w-sm">
+              <ListingContact
+                listing={listing}
+                listingSlug={slug}
+                listingTitle={boat.title}
+                listingUrl={listingUrl}
+                listingNumber={boat.listingNumber}
+                siteName={config.siteName}
+                user={user}
+              />
+            </div>
+          ) : (
+            <div className="w-full max-w-sm">
+              <StaticListingContactFallback
+                config={config}
+                listingTitle={boat.title}
+                listingUrl={listingUrl}
+                listingNumber={boat.listingNumber}
+              />
+            </div>
+          )}
         </div>
-        <div className="flex-1">
-          {boat.listingNumber ? (
-            <p className="text-[13px] font-bold text-navy">
-              İlan No: {formatListingNumber(boat.listingNumber)}
-            </p>
-          ) : null}
-          <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <p className="text-[22px] font-bold text-navy">
-              {formatPrice(
-                boat.price,
-                parseListingCurrency(listing?.currency ?? boat.currency),
-              )}
-            </p>
-            {listing && isDbConfigured() ? (
-              <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+            <div className="min-w-0">
+              {boat.listingNumber ? (
+                <p className="text-[13px] font-bold text-navy">
+                  İlan No: {formatListingNumber(boat.listingNumber)}
+                </p>
+              ) : null}
+              <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <p className="text-[22px] font-bold text-navy">
+                  {formatPrice(
+                    boat.price,
+                    parseListingCurrency(listing?.currency ?? boat.currency),
+                  )}
+                </p>
+                {listing && isDbConfigured() ? (
+                  <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+                ) : null}
+              </div>
+            </div>
+            {listing ? (
+              <div className="w-full max-w-[240px] shrink-0 lg:ml-4">
+                <OfferForm
+                  listingId={listing.id}
+                  listingSlug={slug}
+                  listingTitle={boat.title}
+                  listingPrice={boat.price}
+                  user={user}
+                  existingOffer={existingOffer}
+                />
+              </div>
             ) : null}
           </div>
-          <table className="mt-6 w-full max-w-md border-collapse text-[13px]">
+          <table className="mt-6 w-fit border-collapse text-[13px]">
             <tbody>
               {boat.listingNumber ? (
                 <tr className="border-b border-border">
@@ -139,38 +179,8 @@ export default async function BoatDetailPage({ params }: Props) {
                   <td className="py-2 font-medium">{boat.engine}</td>
                 </tr>
               )}
-            </tbody>
+              </tbody>
           </table>
-          <div className="mt-8 flex w-full max-w-lg flex-col items-start gap-4">
-            {listing ? (
-              <>
-                <ListingContact
-                  listing={listing}
-                  listingSlug={slug}
-                  listingTitle={boat.title}
-                  listingUrl={listingUrl}
-                  listingNumber={boat.listingNumber}
-                  siteName={config.siteName}
-                  user={user}
-                />
-                <OfferForm
-                  listingId={listing.id}
-                  listingSlug={slug}
-                  listingTitle={boat.title}
-                  listingPrice={boat.price}
-                  user={user}
-                  existingOffer={existingOffer}
-                />
-              </>
-            ) : (
-              <StaticListingContactFallback
-                config={config}
-                listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-              />
-            )}
-          </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">
               ← Listeye dön

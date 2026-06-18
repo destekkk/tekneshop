@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FavorilerimReadMarker from "@/components/FavorilerimReadMarker";
 import FavoritesManager from "@/components/FavoritesManager";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import { requireUser } from "@/lib/auth/user-session";
@@ -7,13 +8,11 @@ import { formatPrice as formatProductPrice, getCsyProduct } from "@/lib/csy-prod
 import { isDbConfigured } from "@/lib/db";
 import { getUserFavorites } from "@/lib/favorites-store";
 import { parseListingCurrency } from "@/lib/listing-currency";
-import {
-  getListingPriceHistory,
-  getUserPriceAlerts,
-  markUserPriceAlertsRead,
-} from "@/lib/price-history-store";
+import { getListingPriceHistory, getUserPriceAlerts } from "@/lib/price-history-store";
 
 export const metadata = { title: "Favorilerim | TekneShop" };
+
+export const dynamic = "force-dynamic";
 
 function formatDateTime(value: Date | string) {
   const d = typeof value === "string" ? new Date(value) : value;
@@ -53,8 +52,6 @@ export default async function FavorilerimPage() {
     getUserFavorites(user.id),
     getUserPriceAlerts(user.id, 20),
   ]);
-
-  await markUserPriceAlertsRead(user.id);
 
   const favoriteItems = await Promise.all(
     favorites.map(async (fav) => {
@@ -98,6 +95,7 @@ export default async function FavorilerimPage() {
 
   return (
     <>
+      <FavorilerimReadMarker />
       <ListingPageHeader
         title="Favorilerim"
         count={favoriteItems.length}
