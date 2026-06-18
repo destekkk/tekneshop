@@ -99,27 +99,39 @@ export default async function BoatDetailPage({ params }: Props) {
             </div>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          {boat.listingNumber ? (
-            <p className="text-[13px] font-bold text-navy">
-              İlan No: {formatListingNumber(boat.listingNumber)}
-            </p>
+        <div className="min-w-0 flex-1 lg:relative">
+          {listing ? (
+            <div className="mt-4 w-full max-w-[240px] lg:absolute lg:right-4 lg:top-0 lg:mt-0">
+              <OfferForm
+                listingId={listing.id}
+                listingSlug={slug}
+                listingTitle={boat.title}
+                listingPrice={boat.price}
+                user={user}
+                existingOffer={existingOffer}
+              />
+            </div>
           ) : null}
-          <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <p className="text-[22px] font-bold text-navy">
-              {formatPrice(
-                boat.price,
-                parseListingCurrency(listing?.currency ?? boat.currency),
-              )}
-            </p>
-            {listing && isDbConfigured() ? (
-              <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+          <div className={listing ? "lg:pr-[268px]" : undefined}>
+            {boat.listingNumber ? (
+              <p className="text-[13px] font-bold text-navy">
+                İlan No: {formatListingNumber(boat.listingNumber)}
+              </p>
             ) : null}
-          </div>
+            <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <p className="text-[22px] font-bold text-navy">
+                {formatPrice(
+                  boat.price,
+                  parseListingCurrency(listing?.currency ?? boat.currency),
+                )}
+              </p>
+              {listing && isDbConfigured() ? (
+                <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+              ) : null}
+            </div>
 
-          <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-start sm:gap-5">
-            <table className="w-fit shrink-0 border-collapse text-[13px]">
+            <table className="mt-4 w-fit border-collapse text-[13px]">
               <tbody>
               {boat.listingNumber ? (
                 <tr className="border-b border-border">
@@ -167,18 +179,6 @@ export default async function BoatDetailPage({ params }: Props) {
               )}
               </tbody>
             </table>
-            {listing ? (
-              <div className="w-full max-w-[240px] shrink-0">
-                <OfferForm
-                  listingId={listing.id}
-                  listingSlug={slug}
-                  listingTitle={boat.title}
-                  listingPrice={boat.price}
-                  user={user}
-                  existingOffer={existingOffer}
-                />
-              </div>
-            ) : null}
           </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">
