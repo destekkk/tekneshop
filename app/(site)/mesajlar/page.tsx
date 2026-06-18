@@ -38,7 +38,7 @@ export default async function MesajlarPage({ searchParams }: Props) {
           { label: "Mesajlar ve Teklifler" },
         ]}
       />
-      <div className="mx-auto max-w-2xl p-6">
+      <div className="max-w-3xl px-4 py-6">
         <MesajlarInboxTabs
           activeTab={activeTab}
           messageCount={inquiries.length}
@@ -68,7 +68,7 @@ export default async function MesajlarPage({ searchParams }: Props) {
           <>
             <p className="mb-4 text-[13px] text-muted">
               Gelen mesajlar kısa listede görünür. <strong className="text-foreground">Cevapla</strong>{" "}
-              ile e-posta istemciniz açılır; uygunsuz mesajları şikayet edebilirsiniz.
+              ile yanıt yazabilir; uygunsuz mesajları şikayet edebilirsiniz.
             </p>
             <SellerInquiriesManager inquiries={inquiries} />
           </>
