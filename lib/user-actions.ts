@@ -20,7 +20,12 @@ import {
   removeProductFavorite,
   removeFavoriteById,
 } from "@/lib/favorites-store";
-import { createOffer, getUserOfferForListing } from "@/lib/offers-store";
+import {
+  createOffer,
+  getOfferForListingOwner,
+  getUserOfferForListing,
+  updateOfferStatus,
+} from "@/lib/offers-store";
 import { getListingBySlug } from "@/lib/listings-store";
 import { logActivity } from "@/lib/admin/activity";
 import {
@@ -118,12 +123,50 @@ export async function submitOfferAction(
 
   revalidatePath(`/tekne/ilan/${listingSlug}`);
   revalidatePath("/admin/teklifler");
+  revalidatePath("/gelen-teklifler");
 
   return {
     ok: true,
-    message: "Teklifiniz iletildi. Satıcı veya yönetici inceleyecektir.",
+    message: "Teklifiniz iletildi. İlan veren veya yönetici inceleyecektir.",
     error: "",
   };
+}
+
+async function revalidateOfferPaths(listingSlug?: string | null) {
+  if (listingSlug) revalidatePath(`/tekne/ilan/${listingSlug}`);
+  revalidatePath("/gelen-teklifler");
+  revalidatePath("/admin/teklifler");
+  revalidatePath("/", "layout");
+}
+
+export async function acceptOfferAsSellerAction(offerId: number) {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.email) {
+    redirect("/giris?redirect=/gelen-teklifler");
+  }
+  if (!isDbConfigured()) return;
+
+  const offer = await getOfferForListingOwner(offerId, session.email);
+  if (!offer) return;
+  if (offer.status !== "pending") return;
+
+  await updateOfferStatus(offerId, "accepted");
+  await revalidateOfferPaths(offer.listingSlug);
+}
+
+export async function rejectOfferAsSellerAction(offerId: number) {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.email) {
+    redirect("/giris?redirect=/gelen-teklifler");
+  }
+  if (!isDbConfigured()) return;
+
+  const offer = await getOfferForListingOwner(offerId, session.email);
+  if (!offer) return;
+  if (offer.status !== "pending") return;
+
+  await updateOfferStatus(offerId, "rejected");
+  await revalidateOfferPaths(offer.listingSlug);
 }
 
 export async function submitListingInquiryAction(

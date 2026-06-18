@@ -5,6 +5,7 @@ import {
   getListingInquiryCountForOwner,
   getUnreadListingInquiryCountForOwner,
 } from "@/lib/listing-inquiries-store";
+import { getPendingOfferCountForOwner } from "@/lib/offers-store";
 import { getUnreadPriceAlertCount } from "@/lib/price-history-store";
 
 function MessageCountBadge({
@@ -44,10 +45,11 @@ export default async function HeaderUserLinks() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const [unreadCount, totalCount, priceAlertCount] = await Promise.all([
+  const [unreadCount, totalCount, priceAlertCount, pendingOfferCount] = await Promise.all([
     isDbConfigured() ? getUnreadListingInquiryCountForOwner(user.email) : 0,
     isDbConfigured() ? getListingInquiryCountForOwner(user.email) : 0,
     isDbConfigured() ? getUnreadPriceAlertCount(user.id) : 0,
+    isDbConfigured() ? getPendingOfferCountForOwner(user.email) : 0,
   ]);
 
   return (
@@ -58,6 +60,13 @@ export default async function HeaderUserLinks() {
       >
         Mesajlarım
         <MessageCountBadge unreadCount={unreadCount} totalCount={totalCount} />
+      </Link>
+      <Link
+        href="/gelen-teklifler"
+        className="group whitespace-nowrap border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:border-navy hover:text-navy"
+      >
+        Gelen Teklifler
+        <AlertCountBadge count={pendingOfferCount} />
       </Link>
       <Link
         href="/favorilerim"

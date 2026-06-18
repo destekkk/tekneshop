@@ -1021,7 +1021,7 @@ export async function syncListingSellersAction() {
 export async function acceptOfferAction(id: number) {
   const session = await requireAdmin();
   if (!isDbConfigured()) return;
-  await updateOfferStatus(id, "accepted");
+  const row = await updateOfferStatus(id, "accepted");
   await logActivity({
     action: "accept_offer",
     entityType: "listing_offer",
@@ -1029,12 +1029,19 @@ export async function acceptOfferAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/teklifler");
+  if (row?.listingId) {
+    const { getListingById } = await import("@/lib/listings-store");
+    const listing = await getListingById(row.listingId);
+    if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
+  }
+  revalidatePath("/gelen-teklifler");
+  revalidatePath("/", "layout");
 }
 
 export async function rejectOfferAction(id: number) {
   const session = await requireAdmin();
   if (!isDbConfigured()) return;
-  await updateOfferStatus(id, "rejected");
+  const row = await updateOfferStatus(id, "rejected");
   await logActivity({
     action: "reject_offer",
     entityType: "listing_offer",
@@ -1042,6 +1049,13 @@ export async function rejectOfferAction(id: number) {
     adminEmail: session.email,
   });
   revalidatePath("/admin/teklifler");
+  if (row?.listingId) {
+    const { getListingById } = await import("@/lib/listings-store");
+    const listing = await getListingById(row.listingId);
+    if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
+  }
+  revalidatePath("/gelen-teklifler");
+  revalidatePath("/", "layout");
 }
 
 export async function deleteOfferAction(id: number) {
