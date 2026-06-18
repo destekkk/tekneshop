@@ -18,9 +18,14 @@ export function isFieldChecked(values: FormFieldValues, name: string) {
   return v === "on" || v === "yes" || v === "true";
 }
 
-export function preserveFormKey(state: { error?: string }, values: FormFieldValues) {
+export function preserveFormKey(
+  state: { ok?: boolean; error?: string },
+  values: FormFieldValues,
+  successNonce = 0,
+) {
+  if (state.ok) return `success-${successNonce}`;
   if (state.error && Object.keys(values).length > 0) {
     return `preserve-${JSON.stringify(values)}`;
   }
-  return "default";
+  return successNonce > 0 ? `success-${successNonce}` : "default";
 }

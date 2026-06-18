@@ -551,7 +551,7 @@ export async function submitPublicListingAction(formData: FormData) {
   return {
     ok: true,
     message: config.moderationRequired
-      ? "İlanınız incelenmek üzere gönderildi. Onaylandığında yayına alınacak."
+      ? "İlanınız onaya gönderildi. Onaylandığında yayına alınacak."
       : "İlanınız yayına alındı.",
   };
 }
