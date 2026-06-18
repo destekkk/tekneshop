@@ -21,12 +21,37 @@ import {
 } from "@/lib/boats";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { listings, type Listing, type NewListing } from "@/lib/db/schema";
+import { defaultSiteConfig, getSiteConfig } from "@/lib/admin/settings";
 import {
   notifyFavoritePriceChange,
   recordListingPrice,
 } from "@/lib/price-history-store";
 
 export type ListingStatus = "pending" | "approved" | "rejected" | "archived";
+
+let staticListingsSeedPromise: Promise<void> | null = null;
+
+async function ensureStaticListingsSeeded() {
+  if (!isDbConfigured()) return;
+  if (!staticListingsSeedPromise) {
+    staticListingsSeedPromise = seedListingsFromStatic().catch(() => {
+      staticListingsSeedPromise = null;
+    });
+  }
+  await staticListingsSeedPromise;
+}
+
+async function fetchApprovedBoatListingRow(slug: string) {
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(listings)
+    .where(
+      and(eq(listings.slug, slug), eq(listings.type, "boat"), eq(listings.status, "approved")),
+    )
+    .limit(1);
+  return row || null;
+}
 
 function staticBoatWithNumber(boat: BoatListing, index: number): BoatListing {
   return { ...boat, listingNumber: demoListingNumber(index + 1) };
@@ -55,11 +80,19 @@ export async function getApprovedBoatListings(): Promise<BoatListing[]> {
   if (!isDbConfigured()) return boatListings.map(staticBoatWithNumber);
   try {
     const db = getDb();
-    const rows = await db
+    let rows = await db
       .select()
       .from(listings)
       .where(and(eq(listings.type, "boat"), eq(listings.status, "approved")))
       .orderBy(desc(listings.isFeatured), desc(listings.approvedAt), desc(listings.createdAt));
+    if (rows.length === 0) {
+      await ensureStaticListingsSeeded();
+      rows = await db
+        .select()
+        .from(listings)
+        .where(and(eq(listings.type, "boat"), eq(listings.status, "approved")))
+        .orderBy(desc(listings.isFeatured), desc(listings.approvedAt), desc(listings.createdAt));
+    }
     if (rows.length === 0) return boatListings.map(staticBoatWithNumber);
     return rows.map(dbToBoat);
   } catch {
@@ -103,21 +136,30 @@ export async function getApprovedBoatDetail(
     return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
   }
   try {
-    const db = getDb();
-    const [row] = await db
-      .select()
-      .from(listings)
-      .where(
-        and(eq(listings.slug, slug), eq(listings.type, "boat"), eq(listings.status, "approved")),
-      )
-      .limit(1);
-    if (row) return { boat: dbToBoat(row), listing: row };
-    const idx = boatListings.findIndex((b) => b.slug === slug);
-    if (idx >= 0) return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
-    return undefined;
+    let row = await fetchApprovedBoatListingRow(slug);
+    if (!row) {
+      const idx = boatListings.findIndex((b) => b.slug === slug);
+      if (idx >= 0) {
+        await ensureStaticListingsSeeded();
+        row = await fetchApprovedBoatListingRow(slug);
+        if (row) return { boat: dbToBoat(row), listing: row };
+        return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+      }
+      return undefined;
+    }
+    return { boat: dbToBoat(row), listing: row };
   } catch {
     const idx = boatListings.findIndex((b) => b.slug === slug);
-    if (idx >= 0) return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+    if (idx >= 0) {
+      try {
+        await ensureStaticListingsSeeded();
+        const row = await fetchApprovedBoatListingRow(slug);
+        if (row) return { boat: dbToBoat(row), listing: row };
+      } catch {
+        // fall through
+      }
+      return { boat: staticBoatWithNumber(boatListings[idx], idx), listing: null };
+    }
     return undefined;
   }
 }
@@ -476,6 +518,14 @@ export async function getAllListingsForExport() {
 
 export async function seedListingsFromStatic() {
   const db = getDb();
+  let supportEmail = defaultSiteConfig.supportEmail;
+  try {
+    const config = await getSiteConfig();
+    supportEmail = config.supportEmail || supportEmail;
+  } catch {
+    // use default
+  }
+
   for (const boat of boatListings) {
     let listingNumber: number;
     try {
@@ -494,6 +544,7 @@ export async function seedListingsFromStatic() {
         condition: boat.condition,
         boatType: boat.boatType,
         price: boat.price,
+        currency: boat.currency || "TRY",
         year: boat.year,
         lengthM: String(boat.lengthM),
         location: boat.location,
@@ -501,11 +552,23 @@ export async function seedListingsFromStatic() {
         badge: boat.badge,
         image: boat.image,
         isFeatured: boat.badge === "Vitrin",
+        showContactPhone: false,
+        contactName: "TekneShop Vitrin",
+        contactEmail: supportEmail,
         approvedAt: new Date(),
         source: "seed",
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing({ target: listings.slug });
   }
+
+  await db
+    .update(listings)
+    .set({
+      showContactPhone: false,
+      contactName: "TekneShop Vitrin",
+      contactEmail: supportEmail,
+    })
+    .where(and(eq(listings.source, "seed"), eq(listings.status, "approved")));
 }
 
 export { boatImagePath };
