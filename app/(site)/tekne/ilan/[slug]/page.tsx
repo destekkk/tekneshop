@@ -74,30 +74,8 @@ export default async function BoatDetailPage({ params }: Props) {
         ]}
       />
       <div className="flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:p-6">
-        <div className="flex w-full max-w-lg flex-col gap-4 lg:w-2/5">
+        <div className="w-full max-w-lg shrink-0 lg:w-2/5">
           <ListingImageGallery images={galleryImages} alt={boat.title} />
-          {listing ? (
-            <div className="w-full max-w-sm">
-              <ListingContact
-                listing={listing}
-                listingSlug={slug}
-                listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-                siteName={config.siteName}
-                user={user}
-              />
-            </div>
-          ) : (
-            <div className="w-full max-w-sm">
-              <StaticListingContactFallback
-                config={config}
-                listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-              />
-            </div>
-          )}
         </div>
         <div className="min-w-0 flex-1 lg:relative">
           {listing ? (
@@ -179,6 +157,27 @@ export default async function BoatDetailPage({ params }: Props) {
               )}
               </tbody>
             </table>
+
+            <div className="mt-6 w-full max-w-sm">
+              {listing ? (
+                <ListingContact
+                  listing={listing}
+                  listingSlug={slug}
+                  listingTitle={boat.title}
+                  listingUrl={listingUrl}
+                  listingNumber={boat.listingNumber}
+                  siteName={config.siteName}
+                  user={user}
+                />
+              ) : (
+                <StaticListingContactFallback
+                  config={config}
+                  listingTitle={boat.title}
+                  listingUrl={listingUrl}
+                  listingNumber={boat.listingNumber}
+                />
+              )}
+            </div>
           </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">
