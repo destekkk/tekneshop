@@ -32,8 +32,8 @@ export default async function ListingContact({
   if (listing.showContactPhone && listing.contactPhone) {
     const telHref = `tel:${listing.contactPhone.replace(/\s/g, "")}`;
     return (
-      <div className="rounded-lg border border-border bg-white p-4">
-        <p className="text-[13px] font-semibold text-navy">İlan veren iletişim</p>
+      <div className="rounded-lg border border-border bg-white p-4 shadow-sm">
+        <p className="text-[14px] font-semibold text-navy">İlan veren iletişim</p>
         {listing.contactName ? (
           <p className="mt-2 text-[13px]">
             <span className="text-muted">Ad:</span> {listing.contactName}
@@ -72,10 +72,10 @@ export default async function ListingContact({
       : null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1">
       {listing.contactName ? (
-        <p className="text-[13px] text-muted">
-          İlan veren: <span className="font-semibold text-foreground">{listing.contactName}</span>
+        <p className="text-[12px] text-muted">
+          İlan veren: <span className="font-medium text-foreground">{listing.contactName}</span>
         </p>
       ) : null}
       <ListingMessageForm

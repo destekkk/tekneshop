@@ -20,9 +20,9 @@ export default function StaticListingContactFallback({
   const hasEmail = Boolean(config.supportEmail);
 
   return (
-    <div className="w-full rounded-lg border border-border bg-white p-4">
-      <p className="text-[13px] font-semibold text-navy">İletişim</p>
-      <p className="mt-1 text-[13px] text-muted">
+    <div className="rounded-lg border border-border bg-white p-4 shadow-sm">
+      <p className="text-[14px] font-semibold text-navy">İletişim</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-muted">
         Bu vitrin ilanı için doğrudan mesaj gönderilemiyor. TekneShop üzerinden iletişime geçin.
       </p>
       {hasPhone ? (

@@ -87,26 +87,6 @@ export default async function BoatDetailPage({ params }: Props) {
       <div className="flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:p-6">
         <div className="w-full shrink-0 lg:w-[49.4%] lg:max-w-[36.4rem]">
           <ListingImageGallery images={galleryImages} alt={boat.title} />
-          <div className="mt-4 w-full">
-            {listing ? (
-              <ListingContact
-                listing={listing}
-                listingSlug={slug}
-                listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-                siteName={config.siteName}
-                user={user}
-              />
-            ) : (
-              <StaticListingContactFallback
-                config={config}
-                listingTitle={boat.title}
-                listingUrl={listingUrl}
-                listingNumber={boat.listingNumber}
-              />
-            )}
-          </div>
         </div>
         <div className="min-w-0 flex-1 lg:relative">
           {listing ? (
@@ -124,72 +104,93 @@ export default async function BoatDetailPage({ params }: Props) {
             </div>
           ) : null}
           <div className={listing ? "lg:pr-[244px]" : undefined}>
+            {listing && isDbConfigured() ? (
+              <div className="mb-3">
+                <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
+              </div>
+            ) : null}
             {boat.listingNumber ? (
               <p className="text-[13px] font-bold text-navy">
                 İlan No: {formatListingNumber(boat.listingNumber)}
               </p>
             ) : null}
             <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-4">
-              <p className="text-[22px] font-bold text-navy">
-                {formatPrice(
-                  boat.price,
-                  parseListingCurrency(listing?.currency ?? boat.currency),
-                )}
-              </p>
-              {listing && isDbConfigured() ? (
-                <FavoriteButton kind="listing" slug={slug} initialFavorited={isFavorited} />
-              ) : null}
-            </div>
+            <p className="mt-3 text-[22px] font-bold text-navy">
+              {formatPrice(
+                boat.price,
+                parseListingCurrency(listing?.currency ?? boat.currency),
+              )}
+            </p>
 
             <table className="mt-4 w-fit border-collapse text-[13px]">
               <tbody>
               {boat.listingNumber ? (
-                <tr className="border-b border-border">
-                  <td className="py-2 pr-4 text-muted">İlan numarası</td>
-                  <td className="py-2 font-medium font-mono">{formatListingNumber(boat.listingNumber)}</td>
+                <tr>
+                  <td className="py-2 pr-6 text-muted">İlan numarası</td>
+                  <td className="py-2 pl-10 font-medium font-mono">{formatListingNumber(boat.listingNumber)}</td>
                 </tr>
               ) : null}
-              <tr className="border-b border-border">
-                <td className="py-2 pr-4 text-muted">İlan tipi</td>
-                <td className="py-2 font-medium">{conditionText}</td>
+              <tr>
+                <td className="py-2 pr-6 text-muted">İlan tipi</td>
+                <td className="py-2 pl-10 font-medium">{conditionText}</td>
               </tr>
-              <tr className="border-b border-border">
-                <td className="py-2 pr-4 text-muted">Kategori</td>
-                <td className="py-2 font-medium">{boatTypeText}</td>
+              <tr>
+                <td className="py-2 pr-6 text-muted">Kategori</td>
+                <td className="py-2 pl-10 font-medium">{boatTypeText}</td>
               </tr>
               {listing?.brand ? (
-                <tr className="border-b border-border">
-                  <td className="py-2 pr-4 text-muted">Marka</td>
-                  <td className="py-2 font-medium">{listing.brand}</td>
+                <tr>
+                  <td className="py-2 pr-6 text-muted">Marka</td>
+                  <td className="py-2 pl-10 font-medium">{listing.brand}</td>
                 </tr>
               ) : null}
               {listing?.model ? (
-                <tr className="border-b border-border">
-                  <td className="py-2 pr-4 text-muted">Model</td>
-                  <td className="py-2 font-medium">{listing.model}</td>
+                <tr>
+                  <td className="py-2 pr-6 text-muted">Model</td>
+                  <td className="py-2 pl-10 font-medium">{listing.model}</td>
                 </tr>
               ) : null}
-              <tr className="border-b border-border">
-                <td className="py-2 pr-4 text-muted">Yıl</td>
-                <td className="py-2 font-medium">{boat.year}</td>
+              <tr>
+                <td className="py-2 pr-6 text-muted">Yıl</td>
+                <td className="py-2 pl-10 font-medium">{boat.year}</td>
               </tr>
-              <tr className="border-b border-border">
-                <td className="py-2 pr-4 text-muted">Boy</td>
-                <td className="py-2 font-medium">{boat.lengthM} m</td>
+              <tr>
+                <td className="py-2 pr-6 text-muted">Boy</td>
+                <td className="py-2 pl-10 font-medium">{boat.lengthM} m</td>
               </tr>
-              <tr className="border-b border-border">
-                <td className="py-2 pr-4 text-muted">Konum</td>
-                <td className="py-2 font-medium">{boat.location}</td>
+              <tr>
+                <td className="py-2 pr-6 text-muted">Konum</td>
+                <td className="py-2 pl-10 font-medium">{boat.location}</td>
               </tr>
               {boat.engine && (
-                <tr className="border-b border-border">
-                  <td className="py-2 pr-4 text-muted">Motor</td>
-                  <td className="py-2 font-medium">{boat.engine}</td>
+                <tr>
+                  <td className="py-2 pr-6 text-muted">Motor</td>
+                  <td className="py-2 pl-10 font-medium">{boat.engine}</td>
                 </tr>
               )}
               </tbody>
             </table>
+
+            <section className="mt-6 max-w-lg border-t border-border pt-5">
+              {listing ? (
+                <ListingContact
+                  listing={listing}
+                  listingSlug={slug}
+                  listingTitle={boat.title}
+                  listingUrl={listingUrl}
+                  listingNumber={boat.listingNumber}
+                  siteName={config.siteName}
+                  user={user}
+                />
+              ) : (
+                <StaticListingContactFallback
+                  config={config}
+                  listingTitle={boat.title}
+                  listingUrl={listingUrl}
+                  listingNumber={boat.listingNumber}
+                />
+              )}
+            </section>
           </div>
           <p className="mt-4">
             <Link href="/tekne" className="text-[13px] link-classified hover:underline">
