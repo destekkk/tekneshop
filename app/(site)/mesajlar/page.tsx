@@ -38,7 +38,7 @@ export default async function MesajlarPage({ searchParams }: Props) {
           { label: "Mesajlar ve Teklifler" },
         ]}
       />
-      <div className="max-w-3xl px-4 py-6">
+      <div className="w-full px-4 py-6 lg:pr-8">
         <p className="mb-3 text-[13px] text-muted">
           Gelen mesajlar kısa listede görünür. <strong className="text-foreground">Cevapla</strong>{" "}
           ile yanıt yazabilir; uygunsuz mesajları şikayet edebilirsiniz.

@@ -26,7 +26,7 @@ export default async function TekliflerPage() {
           { label: "Verdiğim Teklifler" },
         ]}
       />
-      <div className="max-w-3xl px-4 py-6">
+      <div className="w-full px-4 py-6 lg:pr-8">
         <p className="mb-4 text-[13px] text-muted">
           Başka ilanlara verdiğiniz teklifler burada. İlan sahibi kabul ettiğinde iletişim
           bilgilerine erişebilirsiniz. İlanlarınıza gelen teklifler için{" "}
