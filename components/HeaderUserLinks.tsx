@@ -1,35 +1,17 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
-import {
-  getListingInquiryCountForOwner,
-  getUnreadListingInquiryCountForOwner,
-} from "@/lib/listing-inquiries-store";
+import { getUnreadListingInquiryCountForOwner } from "@/lib/listing-inquiries-store";
 import { getPendingOfferCountForOwner, getUnreadBuyerOfferCount } from "@/lib/offers-store";
 import { getUnreadPriceAlertCount } from "@/lib/price-history-store";
 
-function MessageCountBadge({
-  unreadCount,
-  totalCount,
-}: {
-  unreadCount: number;
-  totalCount: number;
-}) {
-  if (unreadCount > 0) {
-    return (
-      <span className="ml-1 font-bold text-red-600 group-hover:text-red-600" aria-hidden>
-        ({unreadCount})
-      </span>
-    );
-  }
-  if (totalCount > 0) {
-    return (
-      <span className="ml-1 font-bold text-foreground group-hover:text-navy" aria-hidden>
-        ({totalCount})
-      </span>
-    );
-  }
-  return null;
+function MessageCountBadge({ unreadCount }: { unreadCount: number }) {
+  if (unreadCount <= 0) return null;
+  return (
+    <span className="ml-1 font-bold text-red-600 group-hover:text-red-600" aria-hidden>
+      ({unreadCount})
+    </span>
+  );
 }
 
 function AlertCountBadge({ count }: { count: number }) {
@@ -45,10 +27,9 @@ export default async function HeaderUserLinks() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const [unreadCount, totalCount, priceAlertCount, pendingOfferCount, unreadSentOffers] =
+  const [unreadMessageCount, priceAlertCount, pendingOfferCount, unreadSentOffers] =
     await Promise.all([
       isDbConfigured() ? getUnreadListingInquiryCountForOwner(user.email) : 0,
-      isDbConfigured() ? getListingInquiryCountForOwner(user.email) : 0,
       isDbConfigured() ? getUnreadPriceAlertCount(user.id) : 0,
       isDbConfigured() ? getPendingOfferCountForOwner(user.email) : 0,
       isDbConfigured() ? getUnreadBuyerOfferCount(user.id) : 0,
@@ -62,10 +43,7 @@ export default async function HeaderUserLinks() {
         title="Mesajlar ve ilanlarınıza gelen teklifler"
       >
         Mesajlarım
-        <MessageCountBadge
-          unreadCount={unreadCount + pendingOfferCount}
-          totalCount={totalCount + pendingOfferCount}
-        />
+        <MessageCountBadge unreadCount={unreadMessageCount + pendingOfferCount} />
       </Link>
       <Link
         href="/teklifler"

@@ -123,7 +123,7 @@ export default async function BoatDetailPage({ params }: Props) {
               />
             </div>
           ) : null}
-          <div className={listing ? "lg:pr-[268px]" : undefined}>
+          <div className={listing ? "lg:pr-[348px]" : undefined}>
             {boat.listingNumber ? (
               <p className="text-[13px] font-bold text-navy">
                 İlan No: {formatListingNumber(boat.listingNumber)}

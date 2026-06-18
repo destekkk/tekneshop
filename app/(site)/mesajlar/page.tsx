@@ -6,7 +6,10 @@ import SellerInquiriesManager from "@/components/SellerInquiriesManager";
 import SellerOffersManager from "@/components/SellerOffersManager";
 import { requireUser } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
-import { getListingInquiriesForOwner } from "@/lib/listing-inquiries-store";
+import {
+  getListingInquiriesForOwner,
+  getUnreadListingInquiryCountForOwner,
+} from "@/lib/listing-inquiries-store";
 import { getOffersForListingOwner } from "@/lib/offers-store";
 
 export const metadata = { title: "Mesajlar ve Teklifler | TekneShop" };
@@ -20,15 +23,16 @@ export default async function MesajlarPage({ searchParams }: Props) {
   const activeTab = tab === "teklifler" ? "teklifler" : "mesajlar";
   const user = await requireUser("/mesajlar");
 
-  const [inquiries, offers] = await Promise.all([
+  const [inquiries, offers, unreadMessageCount] = await Promise.all([
     isDbConfigured() ? getListingInquiriesForOwner(user.email) : [],
     isDbConfigured() ? getOffersForListingOwner(user.email) : [],
+    isDbConfigured() ? getUnreadListingInquiryCountForOwner(user.email) : 0,
   ]);
   const pendingOfferCount = offers.filter((o) => o.status === "pending").length;
 
   return (
     <>
-      {activeTab === "mesajlar" ? <MesajlarReadMarker /> : null}
+      <MesajlarReadMarker />
       <ListingPageHeader
         title={activeTab === "teklifler" ? "Gelen Teklifler" : "İlan Mesajlarım"}
         count={activeTab === "teklifler" ? offers.length : inquiries.length}
@@ -46,7 +50,7 @@ export default async function MesajlarPage({ searchParams }: Props) {
 
         <MesajlarInboxTabs
           activeTab={activeTab}
-          messageCount={inquiries.length}
+          unreadMessageCount={unreadMessageCount}
           offerCount={offers.length}
           pendingOfferCount={pendingOfferCount}
         />

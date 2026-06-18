@@ -4,12 +4,12 @@ import Link from "next/link";
 
 export default function MesajlarInboxTabs({
   activeTab,
-  messageCount,
+  unreadMessageCount,
   offerCount,
   pendingOfferCount,
 }: {
   activeTab: "mesajlar" | "teklifler";
-  messageCount: number;
+  unreadMessageCount: number;
   offerCount: number;
   pendingOfferCount: number;
 }) {
@@ -25,8 +25,8 @@ export default function MesajlarInboxTabs({
       <div className="flex flex-wrap gap-1">
         <Link href="/mesajlar" className={tabClass("mesajlar")}>
           Mesajlar
-          {messageCount > 0 ? (
-            <span className="ml-1 font-bold text-foreground">({messageCount})</span>
+          {unreadMessageCount > 0 ? (
+            <span className="ml-1 font-bold text-red-600">({unreadMessageCount})</span>
           ) : null}
         </Link>
         <Link href="/mesajlar?tab=teklifler" className={tabClass("teklifler")}>
