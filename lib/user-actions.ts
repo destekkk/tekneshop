@@ -303,9 +303,17 @@ export async function submitListingInquiryAction(
     return { ok: false, message: "", error: "Bu ilan doğrudan telefon ile iletişime açık." };
   }
 
-  const existing = await getInquiryByListingAndSender(listingId, session.userId);
+  const existing = await getInquiryByListingAndSender(
+    listingId,
+    session.userId,
+    senderEmail,
+  );
   if (existing) {
-    const conversation = await getBuyerInquiryConversation(listingId, session.userId);
+    const conversation = await getBuyerInquiryConversation(
+      listingId,
+      session.userId,
+      senderEmail,
+    );
     if (!conversation.canBuyerReply) {
       return {
         ok: false,

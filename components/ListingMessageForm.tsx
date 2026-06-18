@@ -30,15 +30,23 @@ export default function ListingMessageForm({
     initial,
   );
   const [successNonce, setSuccessNonce] = useState(0);
+  const [justSent, setJustSent] = useState(false);
   const formKey = preserveFormKey(state, values, successNonce);
-  const fields = state.ok || conversation?.waitingForSeller ? {} : values;
 
-  const canReply = conversation?.canBuyerReply ?? true;
-  const waitingForSeller = conversation?.waitingForSeller ?? false;
-  const showDelivered = waitingForSeller || state.ok;
+  const serverWaiting = conversation?.waitingForSeller ?? false;
+  const canReplyFromServer = conversation?.canBuyerReply ?? true;
+  const locked = justSent || serverWaiting || !canReplyFromServer;
+  const canReply = !locked;
+  const fields = locked ? {} : values;
+
+  useEffect(() => {
+    if (serverWaiting) setJustSent(true);
+    if (canReplyFromServer && conversation?.inquiryId) setJustSent(false);
+  }, [serverWaiting, canReplyFromServer, conversation?.inquiryId]);
 
   useEffect(() => {
     if (!state.ok) return;
+    setJustSent(true);
     setSuccessNonce((n) => n + 1);
   }, [state.ok, state.message]);
 
@@ -64,7 +72,7 @@ export default function ListingMessageForm({
         Telefon gizli — mesajınız satıcıya iletilir.
       </p>
 
-      {showDelivered ? (
+      {locked || state.ok ? (
         <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-[13px] text-emerald-800">
           Mesajınız iletildi. İlan veren sizinle iletişime geçebilir.
         </p>
@@ -81,40 +89,42 @@ export default function ListingMessageForm({
         <p className="mt-3 rounded bg-rose-50 px-3 py-2 text-[13px] text-rose-800">{state.error}</p>
       ) : null}
 
-      <form key={formKey} action={action} className="mt-4 space-y-3 text-left">
-        <input type="hidden" name="listingId" value={listingId} />
-        <input type="hidden" name="listingSlug" value={listingSlug} />
-        <input type="hidden" name="listingTitle" value={listingTitle} />
+      <p className="mt-4 text-[12px] text-muted">
+        Gönderen: <span className="font-medium text-foreground">{user.name}</span> ({user.email})
+      </p>
 
-        <p className="text-[12px] text-muted">
-          Gönderen: <span className="font-medium text-foreground">{user.name}</span> ({user.email})
+      {locked ? (
+        <p className="mt-3 rounded border border-border bg-[#f5f5f5] px-3 py-2 text-[13px] text-muted">
+          İlan verenin yanıtını bekleyin. Bu ilana yeni mesaj gönderemezsiniz; diğer ilanlara mesaj
+          yazabilirsiniz.
         </p>
+      ) : (
+        <form key={formKey} action={action} className="mt-3 space-y-3 text-left">
+          <input type="hidden" name="listingId" value={listingId} />
+          <input type="hidden" name="listingSlug" value={listingSlug} />
+          <input type="hidden" name="listingTitle" value={listingTitle} />
 
-        <div>
-          <label className="text-[13px] font-semibold text-foreground">Mesajınız *</label>
-          <textarea
-            name="message"
-            required={canReply}
-            rows={3}
-            disabled={!canReply || pending}
-            placeholder={
-              canReply
-                ? "Merhaba, bu ilan hakkında bilgi almak istiyorum…"
-                : "İlan verenin yanıtını bekleyin…"
-            }
-            defaultValue={fieldValue(fields, "message")}
-            className="mt-1 w-full resize-y rounded border border-border bg-white px-3 py-2 text-[14px] outline-none focus:border-navy disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-muted"
-          />
-        </div>
+          <div>
+            <label className="text-[13px] font-semibold text-foreground">Mesajınız *</label>
+            <textarea
+              name="message"
+              required
+              rows={3}
+              placeholder="Merhaba, bu ilan hakkında bilgi almak istiyorum…"
+              defaultValue={fieldValue(fields, "message")}
+              className="mt-1 w-full resize-y rounded border border-border bg-white px-3 py-2 text-[14px] outline-none focus:border-navy"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={!canReply || pending}
-          className="btn-navy rounded-sm px-6 py-2.5 text-[14px] font-bold disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {pending ? "Gönderiliyor…" : "Mesaj Gönder"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={pending}
+            className="btn-navy rounded-sm px-6 py-2.5 text-[14px] font-bold disabled:opacity-50"
+          >
+            {pending ? "Gönderiliyor…" : "Mesaj Gönder"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

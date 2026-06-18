@@ -68,7 +68,7 @@ export default async function ListingContact({
 
   const conversation =
     user && isDbConfigured()
-      ? await getBuyerInquiryConversation(listing.id, user.id)
+      ? await getBuyerInquiryConversation(listing.id, user.id, user.email)
       : null;
 
   return (

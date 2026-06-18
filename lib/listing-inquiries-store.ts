@@ -81,11 +81,15 @@ function conversationFromTimeline(
   };
 }
 
-export async function getInquiryByListingAndSender(listingId: number, senderUserId: number) {
+export async function getInquiryByListingAndSender(
+  listingId: number,
+  senderUserId: number,
+  senderEmail?: string,
+) {
   if (!isDbConfigured()) return null;
   try {
     const db = getDb();
-    const [row] = await db
+    const [byUser] = await db
       .select()
       .from(listingInquiries)
       .where(
@@ -96,13 +100,42 @@ export async function getInquiryByListingAndSender(listingId: number, senderUser
       )
       .orderBy(desc(listingInquiries.createdAt))
       .limit(1);
-    return row || null;
+    if (byUser) return byUser;
+
+    const email = senderEmail?.trim().toLowerCase();
+    if (!email) return null;
+
+    const [byEmail] = await db
+      .select()
+      .from(listingInquiries)
+      .where(
+        and(
+          eq(listingInquiries.listingId, listingId),
+          sql`LOWER(${listingInquiries.senderEmail}) = ${email}`,
+        ),
+      )
+      .orderBy(desc(listingInquiries.createdAt))
+      .limit(1);
+    if (!byEmail) return null;
+
+    if (!byEmail.senderUserId) {
+      await db
+        .update(listingInquiries)
+        .set({ senderUserId })
+        .where(eq(listingInquiries.id, byEmail.id));
+      return { ...byEmail, senderUserId };
+    }
+    return byEmail;
   } catch {
     return null;
   }
 }
 
-export async function getBuyerInquiryConversation(listingId: number, senderUserId: number) {
+export async function getBuyerInquiryConversation(
+  listingId: number,
+  senderUserId: number,
+  senderEmail?: string,
+) {
   if (!isDbConfigured()) {
     return {
       inquiryId: null,
@@ -112,7 +145,7 @@ export async function getBuyerInquiryConversation(listingId: number, senderUserI
     } satisfies BuyerInquiryConversation;
   }
 
-  const inquiry = await getInquiryByListingAndSender(listingId, senderUserId);
+  const inquiry = await getInquiryByListingAndSender(listingId, senderUserId, senderEmail);
   if (!inquiry) {
     return conversationFromTimeline(null, []);
   }
