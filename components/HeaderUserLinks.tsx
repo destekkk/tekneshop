@@ -54,24 +54,26 @@ export default async function HeaderUserLinks() {
       isDbConfigured() ? getUnreadBuyerOfferCount(user.id) : 0,
     ]);
 
-  const teklifAlertCount = pendingOfferCount + unreadSentOffers;
-
   return (
     <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
       <Link
         href="/mesajlar"
         className="group whitespace-nowrap border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:border-navy hover:text-navy"
+        title="Mesajlar ve ilanlarınıza gelen teklifler"
       >
         Mesajlarım
-        <MessageCountBadge unreadCount={unreadCount} totalCount={totalCount} />
+        <MessageCountBadge
+          unreadCount={unreadCount + pendingOfferCount}
+          totalCount={totalCount + pendingOfferCount}
+        />
       </Link>
       <Link
         href="/teklifler"
         className="group whitespace-nowrap border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:border-navy hover:text-navy"
-        title="Verdiğiniz ve ilanlarınıza gelen teklifler"
+        title="Verdiğiniz teklifler"
       >
-        Teklifler
-        <AlertCountBadge count={teklifAlertCount} />
+        Verdiğim Teklifler
+        <AlertCountBadge count={unreadSentOffers} />
       </Link>
       <Link
         href="/favorilerim"

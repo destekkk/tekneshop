@@ -173,7 +173,7 @@ async function revalidateOfferPaths(listingSlug?: string | null) {
 export async function acceptOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/teklifler?tab=gelen");
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
   }
   if (!isDbConfigured()) return;
 
@@ -188,7 +188,7 @@ export async function acceptOfferAsSellerAction(offerId: number) {
 export async function rejectOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/teklifler?tab=gelen");
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
   }
   if (!isDbConfigured()) return;
 
@@ -211,7 +211,7 @@ export async function counterOfferAsSellerAction(
 
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/teklifler?tab=gelen");
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
   }
   if (!isDbConfigured()) {
     return { ok: false, message: "", error: "Veritabanı gerekli." };
@@ -244,7 +244,7 @@ export async function counterOfferAsSellerAction(
 export async function acceptCounterOfferAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.userId) {
-    redirect("/giris?redirect=/teklifler?tab=verdigim");
+    redirect("/giris?redirect=/teklifler");
   }
   if (!isDbConfigured()) return;
 
@@ -258,7 +258,7 @@ export async function acceptCounterOfferAction(offerId: number) {
 export async function rejectCounterOfferAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.userId) {
-    redirect("/giris?redirect=/teklifler?tab=verdigim");
+    redirect("/giris?redirect=/teklifler");
   }
   if (!isDbConfigured()) return;
 
