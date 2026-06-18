@@ -149,7 +149,9 @@ export async function submitOfferAction(
 
   revalidatePath(`/tekne/ilan/${listingSlug}`);
   revalidatePath("/mesajlar");
+  revalidatePath("/teklifler");
   revalidatePath("/tekliflerim");
+  revalidatePath("/gelen-teklifler");
 
   return {
     ok: true,
@@ -160,9 +162,10 @@ export async function submitOfferAction(
 
 async function revalidateOfferPaths(listingSlug?: string | null) {
   if (listingSlug) revalidatePath(`/tekne/ilan/${listingSlug}`);
-  revalidatePath("/mesajlar");
-  revalidatePath("/gelen-teklifler");
+  revalidatePath("/teklifler");
   revalidatePath("/tekliflerim");
+  revalidatePath("/gelen-teklifler");
+  revalidatePath("/mesajlar");
   revalidatePath("/admin/teklifler");
   revalidatePath("/", "layout");
 }
@@ -170,7 +173,7 @@ async function revalidateOfferPaths(listingSlug?: string | null) {
 export async function acceptOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/mesajlar?tab=teklifler");
+    redirect("/giris?redirect=/teklifler?tab=gelen");
   }
   if (!isDbConfigured()) return;
 
@@ -185,7 +188,7 @@ export async function acceptOfferAsSellerAction(offerId: number) {
 export async function rejectOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/mesajlar?tab=teklifler");
+    redirect("/giris?redirect=/teklifler?tab=gelen");
   }
   if (!isDbConfigured()) return;
 
@@ -208,7 +211,7 @@ export async function counterOfferAsSellerAction(
 
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/mesajlar?tab=teklifler");
+    redirect("/giris?redirect=/teklifler?tab=gelen");
   }
   if (!isDbConfigured()) {
     return { ok: false, message: "", error: "Veritabanı gerekli." };
@@ -241,7 +244,7 @@ export async function counterOfferAsSellerAction(
 export async function acceptCounterOfferAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.userId) {
-    redirect("/giris?redirect=/tekliflerim");
+    redirect("/giris?redirect=/teklifler?tab=verdigim");
   }
   if (!isDbConfigured()) return;
 
@@ -255,7 +258,7 @@ export async function acceptCounterOfferAction(offerId: number) {
 export async function rejectCounterOfferAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.userId) {
-    redirect("/giris?redirect=/tekliflerim");
+    redirect("/giris?redirect=/teklifler?tab=verdigim");
   }
   if (!isDbConfigured()) return;
 

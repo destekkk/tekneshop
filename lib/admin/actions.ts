@@ -1034,9 +1034,10 @@ export async function acceptOfferAction(id: number) {
     const listing = await getListingById(row.listingId);
     if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
   }
+  revalidatePath("/teklifler");
   revalidatePath("/gelen-teklifler");
-  revalidatePath("/mesajlar");
   revalidatePath("/tekliflerim");
+  revalidatePath("/mesajlar");
   revalidatePath("/", "layout");
 }
 
@@ -1056,7 +1057,9 @@ export async function rejectOfferAction(id: number) {
     const listing = await getListingById(row.listingId);
     if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
   }
+  revalidatePath("/teklifler");
   revalidatePath("/gelen-teklifler");
+  revalidatePath("/tekliflerim");
   revalidatePath("/mesajlar");
   revalidatePath("/", "layout");
 }

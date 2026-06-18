@@ -135,10 +135,10 @@ export default function OfferForm({
           {new Date(existingOffer.createdAt).toLocaleString("tr-TR")}
         </p>
         <Link
-          href="/tekliflerim"
+          href="/teklifler?tab=verdigim"
           className="mt-3 inline-block text-[12px] text-navy hover:underline"
         >
-          Tekliflerim →
+          Teklifler →
         </Link>
       </div>
     );

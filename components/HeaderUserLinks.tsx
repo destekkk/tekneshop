@@ -45,14 +45,16 @@ export default async function HeaderUserLinks() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const [unreadCount, totalCount, priceAlertCount, pendingOfferCount, unreadAcceptedOffers] =
+  const [unreadCount, totalCount, priceAlertCount, pendingOfferCount, unreadSentOffers] =
     await Promise.all([
-    isDbConfigured() ? getUnreadListingInquiryCountForOwner(user.email) : 0,
-    isDbConfigured() ? getListingInquiryCountForOwner(user.email) : 0,
-    isDbConfigured() ? getUnreadPriceAlertCount(user.id) : 0,
-    isDbConfigured() ? getPendingOfferCountForOwner(user.email) : 0,
-    isDbConfigured() ? getUnreadBuyerOfferCount(user.id) : 0,
-  ]);
+      isDbConfigured() ? getUnreadListingInquiryCountForOwner(user.email) : 0,
+      isDbConfigured() ? getListingInquiryCountForOwner(user.email) : 0,
+      isDbConfigured() ? getUnreadPriceAlertCount(user.id) : 0,
+      isDbConfigured() ? getPendingOfferCountForOwner(user.email) : 0,
+      isDbConfigured() ? getUnreadBuyerOfferCount(user.id) : 0,
+    ]);
+
+  const teklifAlertCount = pendingOfferCount + unreadSentOffers;
 
   return (
     <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -64,18 +66,12 @@ export default async function HeaderUserLinks() {
         <MessageCountBadge unreadCount={unreadCount} totalCount={totalCount} />
       </Link>
       <Link
-        href="/mesajlar?tab=teklifler"
+        href="/teklifler"
         className="group whitespace-nowrap border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:border-navy hover:text-navy"
+        title="Verdiğiniz ve ilanlarınıza gelen teklifler"
       >
-        Gelen Teklifler
-        <AlertCountBadge count={pendingOfferCount} />
-      </Link>
-      <Link
-        href="/tekliflerim"
-        className="group whitespace-nowrap border border-border bg-card px-3 py-1.5 text-[13px] text-foreground hover:border-navy hover:text-navy"
-      >
-        Tekliflerim
-        <AlertCountBadge count={unreadAcceptedOffers} />
+        Teklifler
+        <AlertCountBadge count={teklifAlertCount} />
       </Link>
       <Link
         href="/favorilerim"
