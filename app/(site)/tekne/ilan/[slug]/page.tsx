@@ -85,7 +85,7 @@ export default async function BoatDetailPage({ params }: Props) {
         ]}
       />
       <div className="flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:p-6">
-        <div className="w-full shrink-0 lg:w-[38%] lg:max-w-md">
+        <div className="w-full shrink-0 lg:w-[49.4%] lg:max-w-[36.4rem]">
           <ListingImageGallery images={galleryImages} alt={boat.title} />
           <div className="mt-4 w-full">
             {listing ? (
@@ -110,7 +110,7 @@ export default async function BoatDetailPage({ params }: Props) {
         </div>
         <div className="min-w-0 flex-1 lg:relative">
           {listing ? (
-            <div className="mt-4 w-full max-w-[240px] lg:absolute lg:right-4 lg:top-0 lg:mt-0">
+            <div className="mt-4 w-full max-w-[312px] lg:absolute lg:right-4 lg:top-0 lg:mt-0">
               <OfferForm
                 listingId={listing.id}
                 listingSlug={slug}
