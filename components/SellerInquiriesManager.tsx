@@ -2,65 +2,111 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { reportListingInquiryAction } from "@/lib/user-actions";
+import { replyListingInquiryAction, reportListingInquiryAction } from "@/lib/user-actions";
 import type { OwnerListingInquiry } from "@/lib/listing-inquiries-store";
 
 const initial = { ok: false, message: "", error: "" };
 
-function ReportForm({ inquiryId }: { inquiryId: number }) {
-  const [open, setOpen] = useState(false);
+const btnBase =
+  "rounded px-2 py-1 text-[11px] font-semibold whitespace-nowrap disabled:opacity-50";
+
+function formatShortDate(date: Date) {
+  return date.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function InlineReportForm({
+  inquiryId,
+  onClose,
+}: {
+  inquiryId: number;
+  onClose: () => void;
+}) {
   const [state, action, pending] = useActionState(reportListingInquiryAction, initial);
 
   if (state.ok) {
     return (
-      <p className="mt-2 rounded bg-emerald-50 px-2 py-1.5 text-[12px] text-emerald-800">
+      <p className="border-t border-border bg-emerald-50/60 px-3 py-1.5 text-[11px] text-emerald-800">
         {state.message}
       </p>
     );
   }
 
-  if (!open) {
-    return (
+  return (
+    <form
+      action={action}
+      className="flex flex-wrap items-center gap-2 border-t border-border bg-rose-50/40 px-3 py-2"
+    >
+      <input type="hidden" name="inquiryId" value={inquiryId} />
+      <input
+        name="reason"
+        required
+        placeholder="Şikayet gerekçesi (kısa)"
+        className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px]"
+      />
       <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-2 text-[12px] font-medium text-rose-700 hover:underline"
+        type="submit"
+        disabled={pending}
+        className={`${btnBase} bg-rose-600 text-white`}
       >
-        Mesajı şikayet et
+        {pending ? "…" : "Gönder"}
       </button>
+      <button type="button" onClick={onClose} className="text-[11px] text-muted hover:text-foreground">
+        İptal
+      </button>
+      {state.error ? (
+        <span className="w-full text-[11px] text-rose-700">{state.error}</span>
+      ) : null}
+    </form>
+  );
+}
+
+function InlineReplyForm({
+  inquiryId,
+  onClose,
+}: {
+  inquiryId: number;
+  onClose: () => void;
+}) {
+  const [state, action, pending] = useActionState(replyListingInquiryAction, initial);
+
+  if (state.ok) {
+    return (
+      <p className="border-t border-border bg-emerald-50/60 px-3 py-1.5 text-[11px] text-emerald-800">
+        {state.message}
+      </p>
     );
   }
 
   return (
-    <form action={action} className="mt-2 space-y-2 rounded border border-rose-200 bg-rose-50/50 p-2.5">
+    <form
+      action={action}
+      className="flex flex-wrap items-center gap-2 border-t border-border bg-sky-50/40 px-3 py-2"
+    >
       <input type="hidden" name="inquiryId" value={inquiryId} />
-      <p className="text-[11px] font-semibold text-rose-800">Yönetime şikayet et</p>
-      {state.error ? (
-        <p className="rounded bg-rose-100 px-2 py-1 text-[11px] text-rose-800">{state.error}</p>
-      ) : null}
-      <textarea
-        name="reason"
+      <input
+        name="reply"
         required
-        rows={2}
-        placeholder="Neden şikayet ediyorsunuz? (spam, hakaret, dolandırıcılık vb.)"
-        className="w-full resize-y rounded border border-border px-2 py-1.5 text-[12px]"
+        placeholder="Yanıtınızı yazın"
+        className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px]"
       />
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-rose-700 px-3 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
-        >
-          {pending ? "Gönderiliyor…" : "Şikayeti Gönder"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="text-[11px] text-muted hover:text-foreground"
-        >
-          Vazgeç
-        </button>
-      </div>
+      <button
+        type="submit"
+        disabled={pending}
+        className={`${btnBase} bg-navy text-white`}
+      >
+        {pending ? "…" : "Gönder"}
+      </button>
+      <button type="button" onClick={onClose} className="text-[11px] text-muted hover:text-foreground">
+        İptal
+      </button>
+      {state.error ? (
+        <span className="w-full text-[11px] text-rose-700">{state.error}</span>
+      ) : null}
     </form>
   );
 }
@@ -70,57 +116,95 @@ export default function SellerInquiriesManager({
 }: {
   inquiries: OwnerListingInquiry[];
 }) {
+  const [reportId, setReportId] = useState<number | null>(null);
+  const [replyId, setReplyId] = useState<number | null>(null);
+
   if (inquiries.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
-        <p className="text-[13px] text-muted">İlanlarınıza henüz mesaj gelmemiş.</p>
-        <p className="mt-2 text-[12px] text-muted">
-          Telefonu gizlediğiniz ilanlara gelen mesajlar burada görünür.
-        </p>
-      </div>
+      <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-[13px] text-muted">
+        İlanlarınıza henüz mesaj gelmemiş.
+      </p>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-border rounded-lg border border-border bg-card">
       {inquiries.map((m) => (
-        <article key={m.id} className="rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              {m.listingSlug ? (
-                <Link
-                  href={`/tekne/ilan/${m.listingSlug}`}
-                  className="font-bold text-navy hover:underline"
-                >
-                  {m.listingTitle || "İlan"}
-                </Link>
-              ) : (
-                <p className="font-bold">{m.listingTitle || "İlan"}</p>
-              )}
-              <p className="mt-1 text-[12px] text-muted">
-                {m.senderName} · {m.senderEmail}
-                {m.senderPhone ? ` · ${m.senderPhone}` : ""} ·{" "}
-                {new Date(m.createdAt).toLocaleString("tr-TR")}
+        <div key={m.id}>
+          <div
+            className={`flex items-start gap-2 px-3 py-2 sm:items-center sm:gap-3 ${
+              !m.read ? "bg-sky-50/50" : ""
+            }`}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] text-muted">
+                {m.listingSlug ? (
+                  <Link
+                    href={`/tekne/ilan/${m.listingSlug}`}
+                    className="font-medium text-navy hover:underline"
+                  >
+                    {m.listingTitle || "İlan"}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">{m.listingTitle || "İlan"}</span>
+                )}
+                <span className="mx-1">·</span>
+                <span>{m.senderName}</span>
+                <span className="mx-1">·</span>
+                <span>{formatShortDate(new Date(m.createdAt))}</span>
+                {m.reported ? (
+                  <>
+                    <span className="mx-1">·</span>
+                    <span className="text-rose-700">Şikayetli</span>
+                  </>
+                ) : null}
+                {m.canSellerReply === false ? (
+                  <>
+                    <span className="mx-1">·</span>
+                    <span className="text-muted">Yanıtlandı</span>
+                  </>
+                ) : null}
+              </p>
+              <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-foreground">
+                {m.latestMessage ?? m.message}
               </p>
             </div>
-            {m.reported ? (
-              <span className="rounded bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800">
-                Şikayet iletildi
-              </span>
-            ) : null}
+
+            <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
+              {m.canSellerReply ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyId((id) => (id === m.id ? null : m.id));
+                    setReportId(null);
+                  }}
+                  className={`${btnBase} bg-navy text-white`}
+                >
+                  Cevapla
+                </button>
+              ) : null}
+              {m.reported ? null : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportId((id) => (id === m.id ? null : m.id));
+                    setReplyId(null);
+                  }}
+                  className={`${btnBase} border border-rose-200 bg-white text-rose-700`}
+                >
+                  Şikayet et
+                </button>
+              )}
+            </div>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-[13px]">{m.message}</p>
-          {m.reported ? (
-            m.reportReason ? (
-              <p className="mt-2 rounded bg-[#fafafa] px-2 py-1.5 text-[11px] text-muted">
-                <span className="font-semibold text-foreground">Şikayet gerekçeniz:</span>{" "}
-                {m.reportReason}
-              </p>
-            ) : null
-          ) : (
-            <ReportForm inquiryId={m.id} />
-          )}
-        </article>
+
+          {replyId === m.id && m.canSellerReply ? (
+            <InlineReplyForm inquiryId={m.id} onClose={() => setReplyId(null)} />
+          ) : null}
+          {reportId === m.id && !m.reported ? (
+            <InlineReportForm inquiryId={m.id} onClose={() => setReportId(null)} />
+          ) : null}
+        </div>
       ))}
     </div>
   );

@@ -7,7 +7,12 @@ import { getUserSession } from "@/lib/auth/user-session";
 import { isDbConfigured } from "@/lib/db";
 import { upsertSubscriber } from "@/lib/email/subscribers-store";
 import {
+  appendInquiryMessage,
   createListingInquiry,
+  canSellerReplyToInquiry,
+  getBuyerInquiryConversation,
+  getInquiryByListingAndSender,
+  getListingInquiryById,
   markListingInquiriesReadForOwner,
   reportListingInquiry,
 } from "@/lib/listing-inquiries-store";
@@ -21,12 +26,18 @@ import {
   removeFavoriteById,
 } from "@/lib/favorites-store";
 import {
+  acceptCounterOffer,
   createOffer,
+  getOfferForBuyer,
   getOfferForListingOwner,
   getUserOfferForListing,
+  markBuyerOffersRead,
+  setCounterOffer,
   updateOfferStatus,
 } from "@/lib/offers-store";
 import { getListingBySlug } from "@/lib/listings-store";
+import { listingPriceInTry, parseListingCurrency } from "@/lib/listing-currency";
+import { getTcmbRates } from "@/lib/tcmb-rates";
 import { logActivity } from "@/lib/admin/activity";
 import {
   createUser,
@@ -114,6 +125,21 @@ export async function submitOfferAction(
     return { ok: false, message: "", error: "Bu ilan için zaten bekleyen bir teklifiniz var." };
   }
 
+  const rates = await getTcmbRates();
+  const listingTry = listingPriceInTry(
+    listing.price,
+    parseListingCurrency(listing.currency),
+    rates,
+  );
+  const minOffer = Math.ceil(listingTry * 0.7);
+  if (amount < minOffer) {
+    return {
+      ok: false,
+      message: "",
+      error: `Teklif, ilan fiyatının %70'inden düşük olamaz (en az ${minOffer.toLocaleString("tr-TR")} ₺).`,
+    };
+  }
+
   await createOffer({
     listingId,
     userId: session.userId,
@@ -122,19 +148,21 @@ export async function submitOfferAction(
   });
 
   revalidatePath(`/tekne/ilan/${listingSlug}`);
-  revalidatePath("/admin/teklifler");
-  revalidatePath("/gelen-teklifler");
+  revalidatePath("/mesajlar");
+  revalidatePath("/tekliflerim");
 
   return {
     ok: true,
-    message: "Teklifiniz iletildi. İlan veren veya yönetici inceleyecektir.",
+    message: "Teklifiniz ilan sahibine iletildi.",
     error: "",
   };
 }
 
 async function revalidateOfferPaths(listingSlug?: string | null) {
   if (listingSlug) revalidatePath(`/tekne/ilan/${listingSlug}`);
+  revalidatePath("/mesajlar");
   revalidatePath("/gelen-teklifler");
+  revalidatePath("/tekliflerim");
   revalidatePath("/admin/teklifler");
   revalidatePath("/", "layout");
 }
@@ -142,7 +170,7 @@ async function revalidateOfferPaths(listingSlug?: string | null) {
 export async function acceptOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/gelen-teklifler");
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
   }
   if (!isDbConfigured()) return;
 
@@ -150,20 +178,89 @@ export async function acceptOfferAsSellerAction(offerId: number) {
   if (!offer) return;
   if (offer.status !== "pending") return;
 
-  await updateOfferStatus(offerId, "accepted");
+  await updateOfferStatus(offerId, "accepted", { buyerRead: false });
   await revalidateOfferPaths(offer.listingSlug);
 }
 
 export async function rejectOfferAsSellerAction(offerId: number) {
   const session = await getUserSession();
   if (!session.isLoggedIn || !session.email) {
-    redirect("/giris?redirect=/gelen-teklifler");
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
   }
   if (!isDbConfigured()) return;
 
   const offer = await getOfferForListingOwner(offerId, session.email);
   if (!offer) return;
   if (offer.status !== "pending") return;
+
+  await updateOfferStatus(offerId, "rejected");
+  await revalidateOfferPaths(offer.listingSlug);
+}
+
+export async function counterOfferAsSellerAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const offerId = Number(formData.get("offerId"));
+  const amountRaw = String(formData.get("counterAmount") || "").replace(/\./g, "").replace(/,/g, "");
+  const counterAmount = Number(amountRaw);
+  const counterMessage = String(formData.get("counterMessage") || "").trim();
+
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.email) {
+    redirect("/giris?redirect=/mesajlar?tab=teklifler");
+  }
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Veritabanı gerekli." };
+  }
+  if (!offerId || !Number.isFinite(counterAmount) || counterAmount <= 0) {
+    return { ok: false, message: "", error: "Geçerli bir karşı teklif tutarı girin." };
+  }
+
+  const offer = await getOfferForListingOwner(offerId, session.email);
+  if (!offer || offer.status !== "pending") {
+    return { ok: false, message: "", error: "Bu teklif için karşı teklif verilemiyor." };
+  }
+  if (counterAmount <= offer.amount) {
+    return {
+      ok: false,
+      message: "",
+      error: "Karşı teklif, alıcının teklifinden yüksek olmalıdır.",
+    };
+  }
+
+  await setCounterOffer(offerId, {
+    counterAmount,
+    counterMessage: counterMessage || undefined,
+  });
+  await revalidateOfferPaths(offer.listingSlug);
+
+  return { ok: true, message: "Karşı teklifiniz alıcıya iletildi.", error: "" };
+}
+
+export async function acceptCounterOfferAction(offerId: number) {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    redirect("/giris?redirect=/tekliflerim");
+  }
+  if (!isDbConfigured()) return;
+
+  const offer = await getOfferForBuyer(offerId, session.userId);
+  if (!offer || offer.status !== "countered") return;
+
+  await acceptCounterOffer(offerId, session.userId);
+  await revalidateOfferPaths(offer.listingSlug);
+}
+
+export async function rejectCounterOfferAction(offerId: number) {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) {
+    redirect("/giris?redirect=/tekliflerim");
+  }
+  if (!isDbConfigured()) return;
+
+  const offer = await getOfferForBuyer(offerId, session.userId);
+  if (!offer || offer.status !== "countered") return;
 
   await updateOfferStatus(offerId, "rejected");
   await revalidateOfferPaths(offer.listingSlug);
@@ -206,15 +303,28 @@ export async function submitListingInquiryAction(
     return { ok: false, message: "", error: "Bu ilan doğrudan telefon ile iletişime açık." };
   }
 
-  await createListingInquiry({
-    listingId,
-    listingTitle: listingTitle || listing.title,
-    senderUserId: session.userId,
-    senderName,
-    senderEmail,
-    senderPhone: senderPhone || undefined,
-    message,
-  });
+  const existing = await getInquiryByListingAndSender(listingId, session.userId);
+  if (existing) {
+    const conversation = await getBuyerInquiryConversation(listingId, session.userId);
+    if (!conversation.canBuyerReply) {
+      return {
+        ok: false,
+        message: "",
+        error: "İlan verenin yanıtını bekleyin. Yanıt gelene kadar yeni mesaj gönderemezsiniz.",
+      };
+    }
+    await appendInquiryMessage(existing.id, "buyer", message);
+  } else {
+    await createListingInquiry({
+      listingId,
+      listingTitle: listingTitle || listing.title,
+      senderUserId: session.userId,
+      senderName,
+      senderEmail,
+      senderPhone: senderPhone || undefined,
+      message,
+    });
+  }
 
   revalidatePath(`/tekne/ilan/${listingSlug}`);
   revalidatePath("/admin/mesajlar");
@@ -226,6 +336,56 @@ export async function submitListingInquiryAction(
     message: "Mesajınız iletildi. İlan veren sizinle iletişime geçebilir.",
     error: "",
   };
+}
+
+export async function replyListingInquiryAction(
+  _prev: { ok: boolean; message: string; error: string },
+  formData: FormData,
+) {
+  const inquiryId = Number(formData.get("inquiryId"));
+  const reply = String(formData.get("reply") || "").trim();
+
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.email) {
+    redirect("/giris?redirect=/mesajlar");
+  }
+
+  if (!inquiryId || !reply) {
+    return { ok: false, message: "", error: "Yanıtınızı yazın." };
+  }
+
+  if (!isDbConfigured()) {
+    return { ok: false, message: "", error: "Veritabanı gerekli." };
+  }
+
+  const inquiry = await getListingInquiryById(inquiryId);
+  if (!inquiry) {
+    return { ok: false, message: "", error: "Mesaj bulunamadı." };
+  }
+
+  const { getListingById } = await import("@/lib/listings-store");
+  const listingRow = await getListingById(inquiry.listingId);
+  const ownerEmail = listingRow?.contactEmail?.trim().toLowerCase();
+  if (!ownerEmail || ownerEmail !== session.email.trim().toLowerCase()) {
+    return { ok: false, message: "", error: "Bu mesaja yanıt verme yetkiniz yok." };
+  }
+
+  if (!(await canSellerReplyToInquiry(inquiryId))) {
+    return {
+      ok: false,
+      message: "",
+      error: "Alıcının yanıtını bekleyin veya zaten yanıt verdiniz.",
+    };
+  }
+
+  await appendInquiryMessage(inquiryId, "seller", reply);
+
+  revalidatePath("/mesajlar");
+  revalidatePath("/admin/mesajlar");
+  if (listingRow?.slug) revalidatePath(`/tekne/ilan/${listingRow.slug}`);
+  revalidatePath("/", "layout");
+
+  return { ok: true, message: "Yanıtınız alıcıya iletildi.", error: "" };
 }
 
 export async function reportListingInquiryAction(
@@ -414,6 +574,15 @@ export async function markMesajlarReadAction() {
   if (!isDbConfigured()) return;
 
   await markListingInquiriesReadForOwner(session.email);
+  revalidatePath("/", "layout");
+}
+
+export async function markTekliflerimReadAction() {
+  const session = await getUserSession();
+  if (!session.isLoggedIn || !session.userId) return;
+  if (!isDbConfigured()) return;
+
+  await markBuyerOffersRead(session.userId);
   revalidatePath("/", "layout");
 }
 

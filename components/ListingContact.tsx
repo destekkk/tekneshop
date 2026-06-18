@@ -1,5 +1,7 @@
 import ListingMessageForm from "@/components/ListingMessageForm";
 import WhatsAppLink from "@/components/WhatsAppLink";
+import { isDbConfigured } from "@/lib/db";
+import { getBuyerInquiryConversation } from "@/lib/listing-inquiries-store";
 import type { Listing } from "@/lib/db/schema";
 
 function formatPhoneDisplay(phone: string) {
@@ -10,7 +12,7 @@ function formatPhoneDisplay(phone: string) {
   return phone;
 }
 
-export default function ListingContact({
+export default async function ListingContact({
   listing,
   listingSlug,
   listingTitle,
@@ -25,7 +27,7 @@ export default function ListingContact({
   listingUrl: string;
   listingNumber?: number;
   siteName: string;
-  user: { name: string; email: string } | null;
+  user: { id: number; name: string; email: string } | null;
 }) {
   if (listing.showContactPhone && listing.contactPhone) {
     const telHref = `tel:${listing.contactPhone.replace(/\s/g, "")}`;
@@ -64,6 +66,11 @@ export default function ListingContact({
     );
   }
 
+  const conversation =
+    user && isDbConfigured()
+      ? await getBuyerInquiryConversation(listing.id, user.id)
+      : null;
+
   return (
     <div className="space-y-3">
       {listing.contactName ? (
@@ -76,6 +83,7 @@ export default function ListingContact({
         listingSlug={listingSlug}
         listingTitle={listingTitle}
         user={user}
+        conversation={conversation}
       />
     </div>
   );

@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import {
-  acceptOfferAction,
-  deleteOfferAction,
-  rejectOfferAction,
-} from "@/lib/admin/actions";
+import { deleteOfferAction } from "@/lib/admin/actions";
 import { formatPrice } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
 import type { OfferWithDetails } from "@/lib/offers-store";
@@ -16,6 +12,7 @@ const statusStyles: Record<string, string> = {
   accepted: "bg-emerald-100 text-emerald-800",
   rejected: "bg-rose-100 text-rose-800",
   withdrawn: "bg-zinc-100 text-zinc-600",
+  countered: "bg-sky-100 text-sky-800",
 };
 
 const statusLabels: Record<string, string> = {
@@ -23,6 +20,7 @@ const statusLabels: Record<string, string> = {
   accepted: "Kabul",
   rejected: "Red",
   withdrawn: "Geri çekildi",
+  countered: "Karşı teklif",
 };
 
 export default function OffersManager({
@@ -44,6 +42,10 @@ export default function OffersManager({
 
   return (
     <div className="space-y-3">
+      <p className="rounded-lg border border-border bg-[#fafafa] px-4 py-3 text-[12px] text-muted">
+        Teklifler doğrudan ilan sahibine iletilir; kabul veya red işlemi ilan veren tarafından
+        yapılır. Burada yalnızca izleme ve gerekirse silme yapılabilir.
+      </p>
       {offers.map((offer) => (
         <article key={offer.id} className="rounded-lg border border-border bg-white p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -88,26 +90,6 @@ export default function OffersManager({
               ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              {offer.status === "pending" ? (
-                <>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => start(() => acceptOfferAction(offer.id))}
-                    className="rounded bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white"
-                  >
-                    Kabul et
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => start(() => rejectOfferAction(offer.id))}
-                    className="rounded bg-rose-600 px-3 py-1.5 text-[11px] font-semibold text-white"
-                  >
-                    Reddet
-                  </button>
-                </>
-              ) : null}
               <button
                 type="button"
                 disabled={pending}

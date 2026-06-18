@@ -224,6 +224,15 @@ export const listingInquiries = pgTable("listing_inquiries", {
   reportReason: text("report_reason"),
   reportedAt: timestamp("reported_at", { withTimezone: true }),
   reportedByUserId: integer("reported_by_user_id"),
+  buyerRead: boolean("buyer_read").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const listingInquiryMessages = pgTable("listing_inquiry_messages", {
+  id: serial("id").primaryKey(),
+  inquiryId: integer("inquiry_id").notNull(),
+  authorRole: text("author_role").notNull(),
+  body: text("body").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -234,6 +243,10 @@ export const listingOffers = pgTable("listing_offers", {
   amount: integer("amount").notNull(),
   message: text("message"),
   status: text("status").notNull().default("pending"),
+  buyerRead: boolean("buyer_read").notNull().default(true),
+  counterAmount: integer("counter_amount"),
+  counterMessage: text("counter_message"),
+  counterAt: timestamp("counter_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -302,6 +315,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type ListingInquiry = typeof listingInquiries.$inferSelect;
 export type NewListingInquiry = typeof listingInquiries.$inferInsert;
+export type ListingInquiryMessage = typeof listingInquiryMessages.$inferSelect;
 export type ListingOffer = typeof listingOffers.$inferSelect;
 export type NewListingOffer = typeof listingOffers.$inferInsert;
 export type UserFavorite = typeof userFavorites.$inferSelect;

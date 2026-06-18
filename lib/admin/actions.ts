@@ -1021,7 +1021,7 @@ export async function syncListingSellersAction() {
 export async function acceptOfferAction(id: number) {
   const session = await requireAdmin();
   if (!isDbConfigured()) return;
-  const row = await updateOfferStatus(id, "accepted");
+  const row = await updateOfferStatus(id, "accepted", { buyerRead: false });
   await logActivity({
     action: "accept_offer",
     entityType: "listing_offer",
@@ -1035,6 +1035,8 @@ export async function acceptOfferAction(id: number) {
     if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
   }
   revalidatePath("/gelen-teklifler");
+  revalidatePath("/mesajlar");
+  revalidatePath("/tekliflerim");
   revalidatePath("/", "layout");
 }
 
@@ -1055,6 +1057,7 @@ export async function rejectOfferAction(id: number) {
     if (listing?.slug) revalidatePath(`/tekne/ilan/${listing.slug}`);
   }
   revalidatePath("/gelen-teklifler");
+  revalidatePath("/mesajlar");
   revalidatePath("/", "layout");
 }
 

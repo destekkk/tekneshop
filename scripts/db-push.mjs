@@ -130,6 +130,18 @@ const statements = [
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS report_reason TEXT`,
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ`,
   `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS reported_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`,
+  `ALTER TABLE listing_inquiries ADD COLUMN IF NOT EXISTS buyer_read BOOLEAN NOT NULL DEFAULT true`,
+  `CREATE TABLE IF NOT EXISTS listing_inquiry_messages (
+    id SERIAL PRIMARY KEY,
+    inquiry_id INTEGER NOT NULL REFERENCES listing_inquiries(id) ON DELETE CASCADE,
+    author_role TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`,
+  `ALTER TABLE listing_offers ADD COLUMN IF NOT EXISTS buyer_read BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE listing_offers ADD COLUMN IF NOT EXISTS counter_amount INTEGER`,
+  `ALTER TABLE listing_offers ADD COLUMN IF NOT EXISTS counter_message TEXT`,
+  `ALTER TABLE listing_offers ADD COLUMN IF NOT EXISTS counter_at TIMESTAMPTZ`,
   `CREATE TABLE IF NOT EXISTS announcements (
     id SERIAL PRIMARY KEY,
     message TEXT NOT NULL,

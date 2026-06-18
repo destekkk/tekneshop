@@ -15,7 +15,8 @@ import {
   formatPrice,
 } from "@/lib/boats";
 import { formatListingNumber } from "@/lib/listing-number";
-import { parseListingCurrency } from "@/lib/listing-currency";
+import { parseListingCurrency, listingPriceInTry } from "@/lib/listing-currency";
+import { getTcmbRates } from "@/lib/tcmb-rates";
 import { getUserOfferForListing } from "@/lib/offers-store";
 import { getApprovedBoatDetail, getListingBySlug } from "@/lib/listings-store";
 import { isDbConfigured } from "@/lib/db";
@@ -33,10 +34,11 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function BoatDetailPage({ params }: Props) {
   const { slug } = await params;
-  const [detail, config, user] = await Promise.all([
+  const [detail, config, user, rates] = await Promise.all([
     getApprovedBoatDetail(slug),
     getSiteConfig(),
     getCurrentUser(),
+    getTcmbRates(),
   ]);
   if (!detail) notFound();
   const { boat } = detail;
@@ -54,6 +56,15 @@ export default async function BoatDetailPage({ params }: Props) {
     : boatTypeLabel(boat.boatType);
   const existingOffer =
     user && listing ? await getUserOfferForListing(user.id, listing.id) : null;
+  const listingCurrency = parseListingCurrency(listing?.currency ?? boat.currency);
+  const listingTry = listing
+    ? listingPriceInTry(listing.price, listingCurrency, rates)
+    : listingPriceInTry(boat.price, listingCurrency, rates);
+  const minOfferAmount = Math.ceil(listingTry * 0.7);
+  const sellerContact =
+    existingOffer?.status === "accepted" && listing
+      ? { name: listing.contactName, phone: listing.contactPhone }
+      : null;
   const isFavorited =
     user && listing && isDbConfigured()
       ? await isListingFavorited(user.id, slug)
@@ -85,8 +96,10 @@ export default async function BoatDetailPage({ params }: Props) {
                 listingSlug={slug}
                 listingTitle={boat.title}
                 listingPrice={boat.price}
+                minOfferAmount={minOfferAmount}
                 user={user}
                 existingOffer={existingOffer}
+                sellerContact={sellerContact}
               />
             </div>
           ) : null}
