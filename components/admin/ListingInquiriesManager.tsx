@@ -75,7 +75,7 @@ export default function ListingInquiriesManager({
               </button>
             </div>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-[13px]">{m.message}</p>
+          <p className="inquiry-msg-body mt-2 whitespace-pre-wrap">{m.message}</p>
           {m.reported && m.reportReason ? (
             <div className="mt-3 rounded border border-rose-200 bg-white px-3 py-2">
               <p className="text-[11px] font-semibold text-rose-800">İlan sahibi şikayeti</p>

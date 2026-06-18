@@ -79,9 +79,9 @@ export default function ListingMessageForm({
       ) : null}
 
       {conversation?.lastSellerMessage && canReply ? (
-        <div className="mt-3 rounded border border-sky-200 bg-sky-50 px-3 py-2 text-[12px] text-sky-900">
-          <p className="font-semibold">İlan veren yanıtladı:</p>
-          <p className="mt-1 whitespace-pre-wrap">{conversation.lastSellerMessage}</p>
+        <div className="mt-3 rounded border border-rose-200 bg-rose-50/40 px-3 py-2">
+          <p className="text-[12px] font-semibold text-foreground">İlan veren yanıtladı:</p>
+          <p className="inquiry-msg-body mt-1 whitespace-pre-wrap">{conversation.lastSellerMessage}</p>
         </div>
       ) : null}
 
@@ -112,7 +112,7 @@ export default function ListingMessageForm({
               rows={3}
               placeholder="Merhaba, bu ilan hakkında bilgi almak istiyorum…"
               defaultValue={fieldValue(fields, "message")}
-              className="mt-1 w-full resize-y rounded border border-border bg-white px-3 py-2 text-[14px] outline-none focus:border-navy"
+              className="inquiry-msg-input mt-1 w-full resize-y rounded border border-border bg-white px-3 py-2 outline-none focus:border-navy"
             />
           </div>
 

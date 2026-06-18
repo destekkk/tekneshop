@@ -78,3 +78,22 @@ body {
 .link-classified:hover {
   text-decoration: underline;
 }
+
+/* İlan mesajlaşma — gövde metinleri kırmızı, +1pt */
+.inquiry-msg-body {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #dc2626;
+}
+
+.inquiry-msg-input {
+  font-size: 13px;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.inquiry-msg-input::placeholder {
+  color: #f87171;
+  font-weight: 400;
+}

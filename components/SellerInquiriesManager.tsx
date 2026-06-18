@@ -92,7 +92,7 @@ function InlineReplyForm({
         name="reply"
         required
         placeholder="Yanıtınızı yazın"
-        className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px]"
+        className="inquiry-msg-input min-w-0 flex-1 rounded border border-border px-2 py-1"
       />
       <button
         type="submit"
@@ -166,14 +166,14 @@ export default function SellerInquiriesManager({
                 ) : null}
               </p>
               <div className="mt-0.5 space-y-1">
-                <p className="line-clamp-2 text-[12px] leading-snug text-foreground">
-                  <span className="font-medium text-muted">Gelen: </span>
-                  {m.latestBuyerMessage ?? m.message}
+                <p className="line-clamp-2 leading-snug">
+                  <span className="text-[12px] font-medium text-muted">Gelen: </span>
+                  <span className="inquiry-msg-body">{m.latestBuyerMessage ?? m.message}</span>
                 </p>
                 {m.latestSellerMessage ? (
-                  <p className="line-clamp-2 text-[12px] leading-snug text-sky-900">
-                    <span className="font-medium text-sky-800">Yanıtınız: </span>
-                    {m.latestSellerMessage}
+                  <p className="line-clamp-2 leading-snug">
+                    <span className="text-[12px] font-medium text-muted">Yanıtınız: </span>
+                    <span className="inquiry-msg-body">{m.latestSellerMessage}</span>
                   </p>
                 ) : null}
               </div>
