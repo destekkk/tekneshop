@@ -1,7 +1,7 @@
-export const LISTING_NUMBER_MIN = 10_000;
-export const LISTING_NUMBER_MAX = 99_999;
+export const LISTING_NUMBER_MIN = 1_000_000;
+export const LISTING_NUMBER_MAX = 9_999_999;
 
-/** Demo/statik ilanlar için tutarlı 5 haneli numara */
+/** Demo/statik ilanlar için tutarlı 7 haneli numara */
 export function demoListingNumber(seed: number) {
   const span = LISTING_NUMBER_MAX - LISTING_NUMBER_MIN + 1;
   return LISTING_NUMBER_MIN + (Math.abs(seed * 48_271) % span);
@@ -18,7 +18,7 @@ export function isValidListingNumber(n: number) {
 
 export function formatListingNumber(n?: number | null) {
   if (!n) return "—";
-  return String(n).padStart(5, "0");
+  return String(n).padStart(7, "0");
 }
 
 export function formatListingNumberPlain(n?: number | null) {

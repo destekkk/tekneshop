@@ -310,19 +310,19 @@ const listingRows = await sql`SELECT id, listing_number FROM listings ORDER BY i
 const usedNumbers = new Set();
 for (const row of listingRows) {
   const n = row.listing_number;
-  if (n >= 10000 && n <= 99999 && !usedNumbers.has(n)) {
+  if (n >= 1_000_000 && n <= 9_999_999 && !usedNumbers.has(n)) {
     usedNumbers.add(n);
     continue;
   }
   let candidate;
   do {
-    candidate = 10000 + Math.floor(Math.random() * 90000);
+    candidate = 1_000_000 + Math.floor(Math.random() * 9_000_000);
   } while (usedNumbers.has(candidate));
   usedNumbers.add(candidate);
   await sql`UPDATE listings SET listing_number = ${candidate} WHERE id = ${row.id}`;
 }
 if (listingRows.length > 0) {
-  console.log("✓ ilan numaraları (5 hane) güncellendi");
+  console.log("✓ ilan numaraları (7 hane) güncellendi");
 }
 
 const tekneMalzSubs = [

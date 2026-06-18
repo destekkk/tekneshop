@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import MaintenancePage from "@/components/MaintenancePage";
 import SiteShell from "@/components/SiteShell";
 import WhatsAppLink from "@/components/WhatsAppLink";
@@ -24,7 +23,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <Header />
         </div>
         <MaintenancePage message={config.maintenanceMessage} />
-        <Footer />
       </>
     );
   }
@@ -35,7 +33,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Header />
       </div>
       <SiteShell>{children}</SiteShell>
-      <Footer />
       {config.whatsappNumber ? (
         <WhatsAppLink
           number={config.whatsappNumber}

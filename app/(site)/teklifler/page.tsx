@@ -42,11 +42,6 @@ export default async function TekliflerPage() {
         ) : (
           <BuyerOffersManager offers={sentOffers} />
         )}
-        <p className="mt-6">
-          <Link href="/tekne" className="text-[13px] text-navy hover:underline">
-            ← Tekne ilanları
-          </Link>
-        </p>
       </div>
     </>
   );

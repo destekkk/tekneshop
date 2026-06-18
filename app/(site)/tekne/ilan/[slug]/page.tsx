@@ -110,7 +110,7 @@ export default async function BoatDetailPage({ params }: Props) {
         </div>
         <div className="min-w-0 flex-1 lg:relative">
           {listing ? (
-            <div className="mt-4 w-full max-w-[312px] lg:absolute lg:right-4 lg:top-0 lg:mt-0">
+            <div className="mt-4 w-full max-w-[218px] shrink-0 lg:absolute lg:right-4 lg:top-0 lg:mt-0 lg:w-[218px]">
               <OfferForm
                 listingId={listing.id}
                 listingSlug={slug}
@@ -123,7 +123,7 @@ export default async function BoatDetailPage({ params }: Props) {
               />
             </div>
           ) : null}
-          <div className={listing ? "lg:pr-[348px]" : undefined}>
+          <div className={listing ? "lg:pr-[244px]" : undefined}>
             {boat.listingNumber ? (
               <p className="text-[13px] font-bold text-navy">
                 İlan No: {formatListingNumber(boat.listingNumber)}

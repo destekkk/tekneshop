@@ -61,10 +61,10 @@ export default async function HeaderUserLinks() {
         <AlertCountBadge count={priceAlertCount} />
       </Link>
       <span
-        className="max-w-[160px] truncate text-[13px] font-medium text-foreground"
+        className="max-w-[220px] truncate whitespace-nowrap text-[13px] font-medium text-turquoise"
         title={user.email}
       >
-        {user.name}
+        Merhaba {user.name}
       </span>
     </div>
   );

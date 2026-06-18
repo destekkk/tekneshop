@@ -1,4 +1,3 @@
-import Link from "next/link";
 import FavorilerimReadMarker from "@/components/FavorilerimReadMarker";
 import FavoritesManager from "@/components/FavoritesManager";
 import ListingPageHeader from "@/components/ListingPageHeader";
@@ -110,11 +109,6 @@ export default async function FavorilerimPage() {
           Her ilan için son 10 fiyat kaydını görebilirsiniz.
         </p>
         <FavoritesManager favorites={favoriteItems} alerts={alertItems} />
-        <p className="mt-8">
-          <Link href="/tekne" className="text-[13px] text-navy hover:underline">
-            ← Tekne ilanları
-          </Link>
-        </p>
       </div>
     </>
   );

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import ListingPageHeader from "@/components/ListingPageHeader";
 import MesajlarInboxTabs from "@/components/MesajlarInboxTabs";
 import MesajlarReadMarker from "@/components/MesajlarReadMarker";
@@ -75,12 +74,6 @@ export default async function MesajlarPage({ searchParams }: Props) {
         ) : (
           <SellerInquiriesManager inquiries={inquiries} />
         )}
-
-        <p className="mt-6">
-          <Link href="/tekne" className="text-[13px] text-navy hover:underline">
-            ← Tekne ilanları
-          </Link>
-        </p>
       </div>
     </>
   );
