@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import HeaderAuth from "@/components/HeaderAuth";
 import { HEADER_HEIGHT } from "@/lib/layout-constants";
@@ -6,6 +7,12 @@ export default function Header() {
   return (
     <header className="border-b border-border bg-card" style={{ height: HEADER_HEIGHT }}>
       <div className="flex h-full items-center gap-4 px-5 lg:gap-6 lg:px-8">
+        <Link href="/" className="shrink-0 pr-2">
+          <span className="text-[26px] font-bold leading-none tracking-tight text-navy">
+            Tekne<span className="text-turquoise">Shop</span>
+          </span>
+        </Link>
+
         <form
           action="/magaza"
           method="get"

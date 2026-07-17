@@ -36,13 +36,13 @@ export default async function HeaderAuth() {
     <div className="flex items-center gap-1.5">
       <Link
         href="/giris?tab=kayit"
-        className="whitespace-nowrap px-3 py-2 text-[10px] text-foreground hover:text-navy"
+        className="whitespace-nowrap px-3 py-2 text-[12px] text-foreground hover:text-navy"
       >
         Kayıt Ol
       </Link>
       <Link
         href="/giris"
-        className="whitespace-nowrap px-3 py-2 text-[10px] text-foreground hover:text-navy"
+        className="whitespace-nowrap px-3 py-2 text-[12px] text-foreground hover:text-navy"
       >
         Giriş Yap
       </Link>
