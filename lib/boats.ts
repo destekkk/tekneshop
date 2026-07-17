@@ -33,10 +33,6 @@ export function boatImagePath(slug: string) {
   return `/boats/${slug}.jpg`;
 }
 
-function boatStockImage(photoId: string) {
-  return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=900&q=80`;
-}
-
 export const boatTypeLabels: Record<BoatType, string> = {
   motoryat: "Motoryat & Yat",
   yelkenli: "Yelkenli",
@@ -64,7 +60,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "azimut-55-fly-sifir",
     title: "Azimut 55 Fly — Teslim Hazır",
-    image: boatStockImage("photo-1569263979104-865ab7cd8d13"),
+    image: boatImagePath("azimut-55-fly-sifir"),
     condition: "sifir",
     boatType: "motoryat",
     price: 48500000,
@@ -77,7 +73,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "beneteau-oceanis-46",
     title: "Beneteau Oceanis 46.1",
-    image: boatStockImage("photo-1544551763-46a013bb70d5"),
+    image: boatImagePath("beneteau-oceanis-46"),
     condition: "ikinci-el",
     boatType: "yelkenli",
     price: 12800000,
@@ -89,7 +85,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "quicksilver-activ-675",
     title: "Quicksilver Activ 675 Weekend",
-    image: boatStockImage("photo-1605281317010-fe5ffe798166"),
+    image: boatImagePath("quicksilver-activ-675"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 2950000,
@@ -102,7 +98,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "zodiac-milpro-580",
     title: "Zodiac Mil Pro 580",
-    image: boatStockImage("photo-1528154291023-a6525fabe5b4"),
+    image: boatImagePath("zodiac-milpro-580"),
     condition: "sifir",
     boatType: "sisme-bot",
     price: 890000,
@@ -114,7 +110,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "sea-doo-gtx-170",
     title: "Sea-Doo GTX 170",
-    image: boatStockImage("photo-1567899378494-47b22a2ae96a"),
+    image: boatImagePath("sea-doo-gtx-170"),
     condition: "ikinci-el",
     boatType: "jet-ski",
     price: 1150000,
@@ -125,7 +121,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "lagoon-42-katamaran",
     title: "Lagoon 42 — Bakımlı",
-    image: boatStockImage("photo-1510771463146-e89e6e86560e"),
+    image: boatImagePath("lagoon-42-katamaran"),
     condition: "ikinci-el",
     boatType: "katamaran",
     price: 22400000,
@@ -137,7 +133,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "prestige-460-kiralik",
     title: "Prestige 460 — Haftalık Kiralama",
-    image: boatStockImage("photo-1500530855697-b586d89ba3ee"),
+    image: boatImagePath("prestige-460-kiralik"),
     condition: "kiralik",
     boatType: "motoryat",
     price: 185000,
@@ -149,7 +145,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "bavaria-cruiser-37",
     title: "Bavaria Cruiser 37",
-    image: boatStockImage("photo-1520637836862-4d197d17c50a"),
+    image: boatImagePath("bavaria-cruiser-37"),
     condition: "sifir",
     boatType: "yelkenli",
     price: 14200000,
@@ -161,7 +157,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "princess-v40-2018",
     title: "Princess V40 — Az Kullanılmış",
-    image: boatStockImage("photo-1562281302-809108fd533c"),
+    image: boatImagePath("princess-v40-2018"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 31800000,
@@ -174,7 +170,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "fairline-targa-45-gt",
     title: "Fairline Targa 45 GT",
-    image: boatStockImage("photo-1500534314209-a25ddb2bd429"),
+    image: boatImagePath("fairline-targa-45-gt"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 36500000,
@@ -186,7 +182,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "jeanneau-sun-odyssey-410",
     title: "Jeanneau Sun Odyssey 410",
-    image: boatStockImage("photo-1507525428034-b723cf961d3e"),
+    image: boatImagePath("jeanneau-sun-odyssey-410"),
     condition: "ikinci-el",
     boatType: "yelkenli",
     price: 17600000,
@@ -198,7 +194,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "hanse-458-2021",
     title: "Hanse 458 — Sahibinden",
-    image: boatStockImage("photo-1499793983690-e29da59ef1c2"),
+    image: boatImagePath("hanse-458-2021"),
     condition: "ikinci-el",
     boatType: "yelkenli",
     price: 19850000,
@@ -211,7 +207,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "bali-4-1-katamaran",
     title: "Bali 4.1 Katamaran",
-    image: boatStockImage("photo-1506744038136-46273834b3fb"),
+    image: boatImagePath("bali-4-1-katamaran"),
     condition: "ikinci-el",
     boatType: "katamaran",
     price: 28750000,
@@ -223,7 +219,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "fountaine-pajot-lucia-40",
     title: "Fountaine Pajot Lucia 40",
-    image: boatStockImage("photo-1500375592092-40eb2168fd21"),
+    image: boatImagePath("fountaine-pajot-lucia-40"),
     condition: "ikinci-el",
     boatType: "katamaran",
     price: 30200000,
@@ -235,7 +231,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "monterey-295-sport-yacht",
     title: "Monterey 295 Sport Yacht",
-    image: boatStockImage("photo-1519046904884-53103b34b206"),
+    image: boatImagePath("monterey-295-sport-yacht"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 6250000,
@@ -247,7 +243,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "boston-whaler-270-dauntless",
     title: "Boston Whaler 270 Dauntless",
-    image: boatStockImage("photo-1500534623283-312aade485b7"),
+    image: boatImagePath("boston-whaler-270-dauntless"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 7900000,
@@ -259,7 +255,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "saxdor-320-gto",
     title: "Saxdor 320 GTO — Sıfır",
-    image: boatStockImage("photo-1534008897995-27a23e859048"),
+    image: boatImagePath("saxdor-320-gto"),
     condition: "sifir",
     boatType: "motoryat",
     price: 12400000,
@@ -272,7 +268,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "capelli-tempest-900-wa",
     title: "Capelli Tempest 900 WA",
-    image: boatStockImage("photo-1500534314209-a25ddb2bd429"),
+    image: boatImagePath("capelli-tempest-900-wa"),
     condition: "ikinci-el",
     boatType: "sisme-bot",
     price: 5450000,
@@ -284,7 +280,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "joker-boat-clubman-24",
     title: "Joker Boat Clubman 24",
-    image: boatStockImage("photo-1528154291023-a6525fabe5b4"),
+    image: boatImagePath("joker-boat-clubman-24"),
     condition: "ikinci-el",
     boatType: "sisme-bot",
     price: 2350000,
@@ -296,7 +292,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "yamaha-fx-cruiser-svho",
     title: "Yamaha FX Cruiser SVHO",
-    image: boatStockImage("photo-1567899378494-47b22a2ae96a"),
+    image: boatImagePath("yamaha-fx-cruiser-svho"),
     condition: "ikinci-el",
     boatType: "jet-ski",
     price: 1650000,
@@ -308,7 +304,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "sea-doo-rxt-x-300",
     title: "Sea-Doo RXT-X 300",
-    image: boatStockImage("photo-1500534623283-312aade485b7"),
+    image: boatImagePath("sea-doo-rxt-x-300"),
     condition: "ikinci-el",
     boatType: "jet-ski",
     price: 1890000,
@@ -321,7 +317,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "gulet-24m-kiralik-bodrum",
     title: "24 m Gulet — Haftalık Kiralık",
-    image: boatStockImage("photo-1507525428034-b723cf961d3e"),
+    image: boatImagePath("gulet-24m-kiralik-bodrum"),
     condition: "kiralik",
     boatType: "diger",
     price: 320000,
@@ -334,7 +330,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "motoryat-18m-kiralik-gocek",
     title: "18 m Motoryat — Günlük Kiralık",
-    image: boatStockImage("photo-1569263979104-865ab7cd8d13"),
+    image: boatImagePath("motoryat-18m-kiralik-gocek"),
     condition: "kiralik",
     boatType: "motoryat",
     price: 85000,
@@ -347,7 +343,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "custom-line-52-trawler",
     title: "Custom Line 52 Trawler",
-    image: boatStockImage("photo-1544551763-46a013bb70d5"),
+    image: boatImagePath("custom-line-52-trawler"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 21800000,
@@ -359,7 +355,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "dufour-390-grand-large",
     title: "Dufour 390 Grand Large",
-    image: boatStockImage("photo-1499793983690-e29da59ef1c2"),
+    image: boatImagePath("dufour-390-grand-large"),
     condition: "ikinci-el",
     boatType: "yelkenli",
     price: 15400000,
@@ -371,7 +367,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "greenline-39-hybrid",
     title: "Greenline 39 Hybrid",
-    image: boatStockImage("photo-1605281317010-fe5ffe798166"),
+    image: boatImagePath("greenline-39-hybrid"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 18800000,
@@ -384,7 +380,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "cranchi-z35",
     title: "Cranchi Z35",
-    image: boatStockImage("photo-1562281302-809108fd533c"),
+    image: boatImagePath("cranchi-z35"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 14250000,
@@ -396,7 +392,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "sunseeker-predator-57",
     title: "Sunseeker Predator 57",
-    image: boatStockImage("photo-1519046904884-53103b34b206"),
+    image: boatImagePath("sunseeker-predator-57"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 54500000,
@@ -409,7 +405,7 @@ export const boatListings: BoatListing[] = [
   {
     slug: "axopar-28-cabin",
     title: "Axopar 28 Cabin",
-    image: boatStockImage("photo-1534008897995-27a23e859048"),
+    image: boatImagePath("axopar-28-cabin"),
     condition: "ikinci-el",
     boatType: "motoryat",
     price: 8950000,
