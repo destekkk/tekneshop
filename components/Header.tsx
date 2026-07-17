@@ -6,9 +6,12 @@ import { HEADER_HEIGHT } from "@/lib/layout-constants";
 export default function Header() {
   return (
     <header className="border-b border-border bg-card" style={{ height: HEADER_HEIGHT }}>
-      <div className="flex h-full items-center gap-4 px-5 lg:gap-6 lg:px-8">
-        <Link href="/" className="shrink-0 pr-2">
-          <span className="text-[26px] font-bold leading-none tracking-tight text-navy">
+      <div className="flex h-full items-center gap-3 px-5 lg:gap-4 lg:px-8">
+        <Link
+          href="/"
+          className="flex h-10 shrink-0 items-center"
+        >
+          <span className="text-[24px] font-bold leading-none tracking-tight text-navy">
             Tekne<span className="text-turquoise">Shop</span>
           </span>
         </Link>
