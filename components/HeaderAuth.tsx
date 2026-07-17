@@ -18,12 +18,12 @@ export default async function HeaderAuth() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <UserLogoutButton />
         {showListing ? (
           <Link
             href="/ilan-ver"
-            className="btn-navy whitespace-nowrap rounded-sm px-5 py-2 text-[14px]"
+            className="btn-navy whitespace-nowrap rounded-sm px-4 py-1.5 text-[11px]"
           >
             {ctaLabel}
           </Link>
@@ -33,23 +33,23 @@ export default async function HeaderAuth() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       <Link
         href="/giris?tab=kayit"
-        className="whitespace-nowrap px-4 py-2.5 text-[13px] text-foreground hover:text-navy"
+        className="whitespace-nowrap px-3 py-2 text-[10px] text-foreground hover:text-navy"
       >
         Kayıt Ol
       </Link>
       <Link
         href="/giris"
-        className="whitespace-nowrap px-4 py-2.5 text-[13px] text-foreground hover:text-navy"
+        className="whitespace-nowrap px-3 py-2 text-[10px] text-foreground hover:text-navy"
       >
         Giriş Yap
       </Link>
       {showListing ? (
         <Link
           href="/ilan-ver"
-          className="btn-navy whitespace-nowrap rounded-sm px-5 py-2.5 text-[14px]"
+          className="btn-navy whitespace-nowrap rounded-sm px-4 py-2 text-[11px]"
         >
           {ctaLabel}
         </Link>
