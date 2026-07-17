@@ -16,8 +16,8 @@ export default function ListingThumbnail({ src, alt, size = "row" }: Props) {
   }
 
   return (
-    <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden border border-border bg-[#f0f0f0]">
-      <Image src={src} alt={alt} fill className="object-cover" sizes="96px" />
+    <div className="relative h-[58px] w-[77px] shrink-0 overflow-hidden border border-border bg-[#f0f0f0]">
+      <Image src={src} alt={alt} fill className="object-cover" sizes="77px" />
     </div>
   );
 }
