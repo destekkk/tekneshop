@@ -127,8 +127,20 @@ async function upsertStaticListingForSlug(slug: string): Promise<Listing | null>
     .onConflictDoUpdate({
       target: listings.slug,
       set: {
+        title: values.title,
         status: "approved",
         type: "boat",
+        condition: values.condition,
+        boatType: values.boatType,
+        price: values.price,
+        currency: values.currency,
+        year: values.year,
+        lengthM: values.lengthM,
+        location: values.location,
+        engine: values.engine,
+        badge: values.badge,
+        image: values.image,
+        isFeatured: values.isFeatured,
         showContactPhone: false,
         contactName: "TekneShop Vitrin",
         contactEmail: supportEmail,
@@ -166,6 +178,7 @@ function dbToBoat(row: Listing): BoatListing {
 export async function getApprovedBoatListings(): Promise<BoatListing[]> {
   if (!isDbConfigured()) return boatListings.map(staticBoatWithNumber);
   try {
+    await ensureStaticListingsSeeded();
     const db = getDb();
     let rows = await db
       .select()
@@ -173,7 +186,6 @@ export async function getApprovedBoatListings(): Promise<BoatListing[]> {
       .where(and(eq(listings.type, "boat"), eq(listings.status, "approved")))
       .orderBy(desc(listings.isFeatured), desc(listings.approvedAt), desc(listings.createdAt));
     if (rows.length === 0) {
-      await ensureStaticListingsSeeded();
       rows = await db
         .select()
         .from(listings)
@@ -632,8 +644,20 @@ export async function seedListingsFromStatic() {
       .onConflictDoUpdate({
         target: listings.slug,
         set: {
+          title: values.title,
           status: "approved",
           type: "boat",
+          condition: values.condition,
+          boatType: values.boatType,
+          price: values.price,
+          currency: values.currency,
+          year: values.year,
+          lengthM: values.lengthM,
+          location: values.location,
+          engine: values.engine,
+          badge: values.badge,
+          image: values.image,
+          isFeatured: values.isFeatured,
           showContactPhone: false,
           contactName: "TekneShop Vitrin",
           contactEmail: supportEmail,
