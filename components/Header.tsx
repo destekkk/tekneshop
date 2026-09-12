@@ -17,17 +17,16 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* SiteTitleBar / liste ile aynı px-4 — ürün listesi sol kenarı */}
         <div className="flex h-full min-w-0 flex-1 items-center gap-3 px-4 lg:gap-4">
           <form
-            action="/magaza"
+            action="/tekne"
             method="get"
             className="flex h-10 min-w-0 flex-1 items-stretch overflow-hidden border border-border lg:max-w-[min(36rem,55%)] lg:flex-none lg:w-[min(36rem,55%)]"
           >
             <input
               type="search"
               name="q"
-              placeholder="Kelime, ilan no veya ürün ara"
+              placeholder="Tekne, ilan no veya konum ara"
               className="h-full min-w-0 flex-1 border-0 bg-white px-3 text-[12px] leading-none outline-none focus:ring-0"
             />
             <button

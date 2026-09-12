@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import FavoriteButton from "@/components/FavoriteButton";
+import JsonLd from "@/components/JsonLd";
 import ListingImageGallery from "@/components/ListingImageGallery";
 import ListingContact from "@/components/ListingContact";
 import OfferForm from "@/components/OfferForm";
@@ -26,10 +28,50 @@ type Props = { params: Promise<{ slug: string }> };
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: Props) {
+function absoluteImage(src: string, siteUrl: string) {
+  if (src.startsWith("http")) return src;
+  return `${siteUrl}${src.startsWith("/") ? src : `/${src}`}`;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const detail = await getApprovedBoatDetail(slug);
-  return { title: detail ? `${detail.boat.title} | TekneShop` : "İlan" };
+  if (!detail) return { title: "İlan | TekneShop" };
+
+  const { boat } = detail;
+  const siteUrl = getSiteUrl();
+  const image = absoluteImage(boat.image, siteUrl);
+  const priceText = formatPrice(boat.price, parseListingCurrency(boat.currency));
+  const description = [
+    conditionLabel(boat.condition),
+    boatTypeLabel(boat.boatType),
+    boat.year ? `${boat.year}` : null,
+    boat.location || null,
+    priceText,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    title: `${boat.title} | TekneShop`,
+    description: `${boat.title} — ${description}. Doğrudan satıcıya mesaj veya teklif gönderin.`,
+    openGraph: {
+      title: boat.title,
+      description,
+      url: `${siteUrl}/tekne/ilan/${slug}`,
+      type: "website",
+      images: [{ url: image, alt: boat.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: boat.title,
+      description,
+      images: [image],
+    },
+    alternates: {
+      canonical: `${siteUrl}/tekne/ilan/${slug}`,
+    },
+  };
 }
 
 export default async function BoatDetailPage({ params }: Props) {
@@ -47,7 +89,8 @@ export default async function BoatDetailPage({ params }: Props) {
     const row = await getListingBySlug(slug);
     if (row?.status === "approved") listing = row;
   }
-  const listingUrl = `${getSiteUrl()}/tekne/ilan/${slug}`;
+  const siteUrl = getSiteUrl();
+  const listingUrl = `${siteUrl}/tekne/ilan/${slug}`;
   const conditionText = listing?.condition
     ? conditionLabel(listing.condition)
     : conditionLabel(boat.condition);
@@ -75,8 +118,32 @@ export default async function BoatDetailPage({ params }: Props) {
       )
     : [boat.image];
 
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: boat.title,
+    image: galleryImages.map((src) => absoluteImage(src, siteUrl)),
+    description: `${conditionText} ${boatTypeText}${boat.location ? ` — ${boat.location}` : ""}`,
+    category: boatTypeText,
+    brand: listing?.brand
+      ? { "@type": "Brand", name: listing.brand }
+      : undefined,
+    offers: {
+      "@type": "Offer",
+      url: listingUrl,
+      priceCurrency: listingCurrency === "USD" ? "USD" : listingCurrency === "EUR" ? "EUR" : "TRY",
+      price: boat.price,
+      availability: "https://schema.org/InStock",
+      itemCondition:
+        boat.condition === "sifir"
+          ? "https://schema.org/NewCondition"
+          : "https://schema.org/UsedCondition",
+    },
+  };
+
   return (
     <div>
+      <JsonLd data={productLd} />
       <Breadcrumb
         items={[
           { label: "Ana Sayfa", href: "/" },
@@ -101,6 +168,9 @@ export default async function BoatDetailPage({ params }: Props) {
                 existingOffer={existingOffer}
                 sellerContact={sellerContact}
               />
+              <p className="mt-2 text-[11px] leading-snug text-muted">
+                Teklif gönderin; satıcı onaylarsa iletişim bilgisi açılır.
+              </p>
             </div>
           ) : null}
           <div className={listing ? "lg:pr-[244px]" : undefined}>
@@ -110,19 +180,25 @@ export default async function BoatDetailPage({ params }: Props) {
               </div>
             ) : null}
             {boat.listingNumber ? (
-              <p className="text-[13px] font-bold text-navy">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-navy">
                 İlan No: {formatListingNumber(boat.listingNumber)}
               </p>
             ) : null}
-            <h1 className="mt-1 text-[20px] font-bold text-foreground">{boat.title}</h1>
-            <p className="mt-3 text-[22px] font-bold text-navy">
+            <h1 className="mt-1 text-[22px] font-bold leading-snug text-foreground sm:text-[24px]">
+              {boat.title}
+            </h1>
+            <p className="mt-3 text-[24px] font-bold text-navy sm:text-[26px]">
               {formatPrice(
                 boat.price,
                 parseListingCurrency(listing?.currency ?? boat.currency),
               )}
             </p>
+            <p className="mt-2 text-[12px] text-muted">
+              {conditionText} · {boatTypeText}
+              {boat.location ? ` · ${boat.location}` : ""}
+            </p>
 
-            <table className="mt-4 w-fit border-collapse text-[13px]">
+            <table className="mt-5 w-fit border-collapse text-[13px]">
               <tbody>
               {boat.listingNumber ? (
                 <tr>
@@ -172,6 +248,9 @@ export default async function BoatDetailPage({ params }: Props) {
             </table>
 
             <section className="mt-6 max-w-lg border-t border-border pt-5">
+              <p className="mb-3 text-[12px] text-muted">
+                Telefon gizli — mesajınız doğrudan satıcıya iletilir.
+              </p>
               {listing ? (
                 <ListingContact
                   listing={listing}

@@ -37,7 +37,8 @@ export const defaultSiteConfig: SiteConfig = {
   whatsappPrefillMessage: "",
   maintenanceMode: false,
   maintenanceMessage: "Bakım çalışması yapılıyor. Kısa süre sonra tekrar deneyin.",
-  seoDescription: "Sıfır ve ikinci el tekne ilanları, yedek parça ve denizcilik ekipmanları.",
+  seoDescription:
+    "Sıfır ve ikinci el tekne, yat, yelkenli ve jet ski ilanları. Doğrudan satıcıya mesaj ve teklif — TekneShop.",
   adsEnabled: false,
   listingSubmissionEnabled: true,
   moderationRequired: true,

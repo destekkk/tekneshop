@@ -97,3 +97,61 @@ body {
   color: #f87171;
   font-weight: 400;
 }
+
+/* Ana sayfa hero — deniz atmosferi + yumuşak giriş */
+.home-hero-overlay {
+  background:
+    linear-gradient(105deg, rgba(6, 50, 71, 0.88) 0%, rgba(10, 77, 104, 0.55) 48%, rgba(10, 77, 104, 0.25) 100%),
+    linear-gradient(to top, rgba(6, 50, 71, 0.65) 0%, transparent 45%);
+}
+
+@keyframes home-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-hero-fade,
+.home-hero-fade-delay,
+.home-hero-fade-delay-2,
+.home-hero-fade-delay-3 {
+  animation: home-hero-in 0.7s ease-out both;
+}
+
+.home-hero-fade-delay {
+  animation-delay: 0.08s;
+}
+
+.home-hero-fade-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.home-hero-fade-delay-3 {
+  animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-fade,
+  .home-hero-fade-delay,
+  .home-hero-fade-delay-2,
+  .home-hero-fade-delay-3 {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

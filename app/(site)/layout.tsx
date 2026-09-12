@@ -4,12 +4,33 @@ import MaintenancePage from "@/components/MaintenancePage";
 import SiteShell from "@/components/SiteShell";
 import WhatsAppLink from "@/components/WhatsAppLink";
 import { getSiteConfig } from "@/lib/admin/settings";
+import { getSiteUrl } from "@/lib/email/config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();
+  const siteUrl = getSiteUrl();
   return {
-    title: `${config.siteName} | Tekne İlanları ve Denizcilik Parçaları`,
+    title: {
+      default: `${config.siteName} | Sıfır ve İkinci El Tekne İlanları`,
+      template: `%s | ${config.siteName}`,
+    },
     description: config.seoDescription,
+    openGraph: {
+      title: `${config.siteName} | Tekne İlanları`,
+      description: config.seoDescription,
+      url: siteUrl,
+      siteName: config.siteName,
+      locale: "tr_TR",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${config.siteName} | Tekne İlanları`,
+      description: config.seoDescription,
+    },
+    alternates: {
+      canonical: siteUrl,
+    },
   };
 }
 
